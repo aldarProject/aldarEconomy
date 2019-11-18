@@ -9,52 +9,57 @@ import kr.dja.aldarEconomy.api.SystemID;
 
 public class MultipleEconomyMap<Depend1, Depend2>
 {
-	private final Map<Depend1, EconomyMap<Depend2>> _eMap;
-	public final Map<Depend1, EconomyMap<Depend2>> eMap;
+	private final Map<Depend1, EconomyMapChild<Depend1, Depend2>> _eMap;
+	public final Map<Depend1, EconomyMapChild<Depend1, Depend2>> eMap;
 	public MultipleEconomyMap()
 	{
 		this._eMap = new HashMap<>();
 		this.eMap = Collections.unmodifiableMap(this._eMap);
 	}
 
-	public boolean increaseEconomy(Depend1 obj1, Depend2 obj2, int amount)
+	public EconomyMapChild<Depend1, Depend2> increaseEconomy(Depend1 key1, Depend2 key2, int amount)
 	{
-		if(amount <= 0) return false;
-		EconomyMap<Depend2> map = this._eMap.get(obj1);
+		EconomyMapChild<Depend1, Depend2> map = this._eMap.get(key1);
 		if(map != null)
 		{
-			map = new EconomyMap<Depend2>();
-			this._eMap.put(obj1, map);
+			map = new EconomyMapChild<Depend1, Depend2>();
+			map.parents.add(key1);
+			this._eMap.put(key1, map);
 		}
-		if(!map.increaseEconomy(obj2, amount)) return false;
-		
-		return true;
+		map.increaseEconomy(key2, amount);
+		return map;
 	}
 	
-	public boolean increaseEconomy(Depend1 obj1_1, Depend1 obj1_2, Depend2 obj2, int amount)
-	{// 더블 체스트를 고려하여 key 두개까지 가능.
-		if(amount <= 0) return false;
-		EconomyMap<Depend2> map1 = this._eMap.get(obj1_1);
-		EconomyMap<Depend2> map2 = this._eMap.get(obj1_2);
+	public void decreaseEconomy(Depend1 obj1, Depend2 obj2, int amount)
+	{
+		EconomyMapChild<Depend1, Depend2> map = this._eMap.get(obj1);
+		map.decreaseEconomy(obj2, amount);
+		if(map.getTotalMoney() <= 0)
+		{
+			for(Depend1 key : map.parents)
+			{
+				this._eMap.remove(key);
+			}
+		}
+	}
+	
+	public void appendKey(Depend1 key, EconomyMapChild<Depend1, Depend2> map)
+	{// 더블체스트 고려, 여러 키로 단일 객체에 접근해야 함.
+		if(!map.parents.contains(key))
+		{
+			map.parents.add(key);
+			this._eMap.put(key, map);
+		}
+	}
+	
+	public void delKey(Depend1 key)
+	{
+		EconomyMapChild<Depend1, Depend2> map = this._eMap.getOrDefault(key, null);
 		if(map != null)
 		{
-			map = new EconomyMap<Depend2>();
-			this._eMap.put(obj1, map);
+			this._eMap.remove(key);
+			map.parents.remove(key);
 		}
-		if(!map.increaseEconomy(obj2, amount)) return false;
-
-		return true;
-	}
-	
-	public boolean decreaseEconomy(Depend1 obj1, Depend2 obj2, int amount)
-	{
-		if(amount <= 0) return false;
-		EconomyMap<Depend2> map = this._eMap.get(obj1);
-		if(map == null) return false;
-		
-		if(!map.decreaseEconomy(obj2, amount)) return false;
-		
-		return true;
 	}
 	
 	public int getMoney(Depend1 obj1, Depend2 obj2)

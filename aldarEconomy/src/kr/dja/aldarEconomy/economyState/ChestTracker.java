@@ -9,10 +9,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.block.Container;
+import org.bukkit.block.DoubleChest;
+import org.bukkit.entity.ChestedHorse;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import kr.dja.aldarEconomy.ConstraintChecker;
@@ -21,13 +25,15 @@ import kr.dja.aldarEconomy.setting.MoneyMetadata;
 public class ChestTracker
 {
 	private final ConstraintChecker checker;
+	private final EconomyDataStorage storage;
 	private final Logger logger;
 	
 	private final Map<Inventory, OpenedChestMoneyInfo> openedChestInv;
 	
-	public ChestTracker(ConstraintChecker checker, Logger logger)
+	public ChestTracker(ConstraintChecker checker, EconomyDataStorage storage, Logger logger)
 	{
 		this.checker = checker;
+		this.storage = storage;
 		this.logger = logger;
 		this.openedChestInv = new HashMap<>();
 	}
@@ -146,6 +152,7 @@ public class ChestTracker
 		int beforeChestMoney = info.chestMoney;
 		info.chestMoney = this.getInventoryMoney(info.masterInven);
 		int diff = info.chestMoney - beforeChestMoney;
+		InventoryHolder holder = info.masterInven.getHolder();
 		for(HumanEntity lookupPlayer: info.playerMoneyMap.keySet())
 		{
 			int playerBeforeMoney = info.playerMoneyMap.get(lookupPlayer);
@@ -154,16 +161,39 @@ public class ChestTracker
 			{
 				
 				Bukkit.getServer().broadcastMessage(String.format("PlayerToChest %s %d",lookupPlayer.getName(), playerBeforeMoney - playerNowMoney));
-				//MoneyStateTracker.PlayerToChest(lookUpPlayer, playerBeforeMoney - playerNowMoney)
-				
+				if(holder instanceof DoubleChest)
+				{
+					this.storage.playerToChest(lookupPlayer, (DoubleChest)holder, playerBeforeMoney - playerNowMoney);
+				}
+				else if(holder instanceof Chest)
+				{
+					this.storage.playerToChest(lookupPlayer, (Chest)holder, playerBeforeMoney - playerNowMoney);
+				}
+				else
+				{
+					logger.log(Level.WARNING, String.format("ChestTracker.chestMoneyCounting구현되지 않은 인벤토리 %s", holder.getClass().getName()));
+				}				
 			}
 			else if(playerBeforeMoney - playerNowMoney < 0)
 			{
 				Bukkit.getServer().broadcastMessage(String.format("ChestToPlayer %s %d",lookupPlayer.getName(), playerNowMoney - playerBeforeMoney));
-				//MoneyStateTracker.PlayerToChest(lookUpPlayer, playerNowMoney - playerBeforeMoney)
+				
+				if(holder instanceof DoubleChest)
+				{
+					this.storage.chestToPlayer((DoubleChest)holder,lookupPlayer, playerNowMoney - playerBeforeMoney);
+				}
+				else if(holder instanceof Chest)
+				{
+					this.storage.chestToPlayer((Chest)holder, lookupPlayer, playerNowMoney - playerBeforeMoney);
+				}
+				else
+				{
+					logger.log(Level.WARNING, String.format("ChestTracker.chestMoneyCounting구현되지 않은 인벤토리 %s", holder.getClass().getName()));
+				}
 			}
 			diff += playerNowMoney - playerBeforeMoney;
 			info.playerMoneyMap.put(lookupPlayer, playerNowMoney);
+			
 			
 		}
 		if(diff != 0)
@@ -204,6 +234,16 @@ public class ChestTracker
 			DoubleChestInventory doubleInv = (DoubleChestInventory)chest;
 			
 			return doubleInv;
+		}
+		return null;
+	}
+	
+	private Chest getChest(Inventory inv)
+	{
+		if(inv.getHolder() instanceof Chest)
+		{
+			Chest chest = (Chest)inv.getHolder();
+			return chest;
 		}
 		return null;
 	}
