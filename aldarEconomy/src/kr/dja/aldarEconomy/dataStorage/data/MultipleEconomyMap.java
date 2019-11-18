@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.economyState.data;
+package kr.dja.aldarEconomy.dataStorage.data;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public class MultipleEconomyMap<Depend1, Depend2>
 	public EconomyMapChild<Depend1, Depend2> increaseEconomy(Depend1 key1, Depend2 key2, int amount)
 	{
 		EconomyMapChild<Depend1, Depend2> map = this._eMap.get(key1);
-		if(map != null)
+		if(map == null)
 		{
 			map = new EconomyMapChild<Depend1, Depend2>();
 			map.parents.add(key1);

@@ -45,7 +45,7 @@ import org.bukkit.inventory.ItemStack;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 
 import kr.dja.aldarEconomy.ConstraintChecker;
-import kr.dja.aldarEconomy.economyState.ChestTracker;
+import kr.dja.aldarEconomy.economyTracker.ChestTracker;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 
 
@@ -123,7 +123,7 @@ public class EventListener implements Listener
 			this.destroyCheck.remove(item);
 			return;
 		}
-		Bukkit.getServer().broadcastMessage("돈소멸" + money.toString());
+		//Bukkit.getServer().broadcastMessage("돈소멸" + money.toString());
 		
 	}
 
@@ -144,7 +144,7 @@ public class EventListener implements Listener
 		{
 			this.chestTracker.gainMoney((HumanEntity)e.getEntity(), money.value * stack.getAmount());
 			this.destroyCheck.add(e.getItem());
-			Bukkit.getServer().broadcastMessage("돈픽업");
+			//Bukkit.getServer().broadcastMessage("돈픽업");
 		}
 		
 	}
@@ -224,11 +224,6 @@ public class EventListener implements Listener
 		if(money == null) return;
 
 		this.destroyCheck.add(e.getEntity());
-		Bukkit.getServer().broadcastMessage("아이템머지");
-		
-		Bukkit.getServer().broadcastMessage(Integer.toString(e.getTarget().getItemStack().getAmount()));
-		Bukkit.getServer().broadcastMessage(Integer.toString(e.getEntity().getItemStack().getAmount()));
-		
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)

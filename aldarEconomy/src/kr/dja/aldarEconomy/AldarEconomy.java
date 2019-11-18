@@ -6,8 +6,8 @@ import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import kr.dja.aldarEconomy.economyState.ChestTracker;
-import kr.dja.aldarEconomy.economyState.EconomyDataStorage;
+import kr.dja.aldarEconomy.dataStorage.EconomyDataStorage;
+import kr.dja.aldarEconomy.economyTracker.ChestTracker;
 import kr.dja.aldarEconomy.eventListener.EventListener;
 import kr.dja.aldarEconomy.setting.ConfigLoader;
 

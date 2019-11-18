@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.economyState;
+package kr.dja.aldarEconomy.economyTracker;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +20,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import kr.dja.aldarEconomy.ConstraintChecker;
+import kr.dja.aldarEconomy.dataStorage.EconomyDataStorage;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 
 public class ChestTracker
@@ -45,8 +46,33 @@ public class ChestTracker
 		Container con = (Container)bs;
 		Inventory chest = con.getInventory();
 		OpenedChestMoneyInfo info = this.getMoneyInfo(chest);
-		if(info == null) return;
-		this.openedChestBreak(b.getLocation(), chest, info);
+		Location bLoc = b.getLocation();
+		
+		DoubleChestInventory doubleChest = this.getDoubleChestInfo(chest);
+		int discountAmount = 0;
+		if(doubleChest != null)
+		{
+			Inventory left = doubleChest.getLeftSide();
+			Inventory right = doubleChest.getRightSide();
+			if(left.getLocation().equals(bLoc))
+			{
+				discountAmount = this.getInventoryMoney(left);
+				if(info != null) info.chestMoney -= discountAmount;
+				this.storage.breakChest(b, discountAmount);
+			}
+			else if(right.getLocation().equals(bLoc))
+			{
+				discountAmount = this.getInventoryMoney(right);
+				if(info != null) info.chestMoney -= discountAmount;
+				this.storage.breakChest(b, discountAmount);
+			}
+		}
+		else
+		{
+			discountAmount = this.getInventoryMoney(chest);
+			if(info != null) info.chestMoney -= discountAmount;
+			this.storage.breakChest(b, discountAmount);
+		}
 	}
 	
 	public void gainMoney(HumanEntity player, int amount)
@@ -120,33 +146,6 @@ public class ChestTracker
 		this.chestMoneyCounting(info);
 	}
 	
-	private void openedChestBreak(Location loc, Inventory chest, OpenedChestMoneyInfo info)
-	{
-		DoubleChestInventory doubleChest = this.getDoubleChestInfo(chest);
-		int discountAmount = 0;
-		if(doubleChest != null)
-		{
-			Inventory left = doubleChest.getLeftSide();
-			Inventory right = doubleChest.getRightSide();
-			if(left.getLocation().equals(loc))
-			{
-				discountAmount = this.getInventoryMoney(left);
-				info.chestMoney -= discountAmount;
-			}
-			else if(right.getLocation().equals(loc))
-			{
-				discountAmount = this.getInventoryMoney(right);
-				info.chestMoney -= discountAmount;
-			}
-		}
-		else
-		{
-			discountAmount = this.getInventoryMoney(chest);
-			info.chestMoney -= discountAmount;
-		}
-		
-	}
-	
 	private void chestMoneyCounting(OpenedChestMoneyInfo info)
 	{
 		int beforeChestMoney = info.chestMoney;
@@ -159,8 +158,6 @@ public class ChestTracker
 			int playerNowMoney = this.getPlayerInventoryMoney(lookupPlayer);
 			if(playerBeforeMoney - playerNowMoney > 0)
 			{
-				
-				Bukkit.getServer().broadcastMessage(String.format("PlayerToChest %s %d",lookupPlayer.getName(), playerBeforeMoney - playerNowMoney));
 				if(holder instanceof DoubleChest)
 				{
 					this.storage.playerToChest(lookupPlayer, (DoubleChest)holder, playerBeforeMoney - playerNowMoney);
@@ -172,15 +169,13 @@ public class ChestTracker
 				else
 				{
 					logger.log(Level.WARNING, String.format("ChestTracker.chestMoneyCounting구현되지 않은 인벤토리 %s", holder.getClass().getName()));
-				}				
+				}			
 			}
 			else if(playerBeforeMoney - playerNowMoney < 0)
 			{
-				Bukkit.getServer().broadcastMessage(String.format("ChestToPlayer %s %d",lookupPlayer.getName(), playerNowMoney - playerBeforeMoney));
-				
 				if(holder instanceof DoubleChest)
 				{
-					this.storage.chestToPlayer((DoubleChest)holder,lookupPlayer, playerNowMoney - playerBeforeMoney);
+					this.storage.chestToPlayer((DoubleChest)holder, lookupPlayer, playerNowMoney - playerBeforeMoney);
 				}
 				else if(holder instanceof Chest)
 				{
@@ -261,7 +256,7 @@ public class ChestTracker
 				if(info == null) info = this.openedChestInv.get(dchest.getRightSide());
 			}
 		}
-		if(info != null)
+		if(info != null && chest.getHolder() != null)
 		{
 			info.masterInven = chest.getHolder().getInventory();
 		}

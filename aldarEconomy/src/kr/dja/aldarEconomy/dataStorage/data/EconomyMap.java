@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.economyState.data;
+package kr.dja.aldarEconomy.dataStorage.data;
 
 import java.util.Collections;
 import java.util.HashMap;
