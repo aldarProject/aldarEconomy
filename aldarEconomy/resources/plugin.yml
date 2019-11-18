@@ -1,0 +1,5 @@
+name: AldarEconomy
+version: 0.0.1
+author: dja12123@naver.com
+description: 알다르 경제 시스템
+main: kr.dja.aldarEconomy.AldarEconomy
