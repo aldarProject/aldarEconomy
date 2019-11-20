@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.dataStorage.data;
+package kr.dja.aldarEconomy.dao;
 
 import org.bukkit.Location;
 

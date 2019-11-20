@@ -45,8 +45,9 @@ import org.bukkit.inventory.ItemStack;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 
 import kr.dja.aldarEconomy.ConstraintChecker;
-import kr.dja.aldarEconomy.economyTracker.ChestTracker;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
+import kr.dja.aldarEconomy.tracker.ChestTracker;
+import kr.dja.aldarEconomy.tracker.ItemTracker;
 
 
 
@@ -54,15 +55,17 @@ public class EventListener implements Listener
 {
 	private final ConstraintChecker checker;
 	private final ChestTracker chestTracker;
+	private final ItemTracker itemTracker;
 	private final Logger logger;
 	
 	private final Set<HumanEntity> closeChestItemDropCheck;
 	private final Set<Item> destroyCheck;
 
-	public EventListener(ConstraintChecker checker, ChestTracker chestTracker, Logger logger)
+	public EventListener(ConstraintChecker checker, ChestTracker chestTracker, ItemTracker itemTracker, Logger logger)
 	{
 		this.checker = checker;
 		this.chestTracker = chestTracker;
+		this.itemTracker = itemTracker;
 		this.logger = logger;
 		this.closeChestItemDropCheck = new HashSet<>();
 		this.destroyCheck = new HashSet<>();
@@ -75,7 +78,9 @@ public class EventListener implements Listener
 		Inventory top = e.getView().getTopInventory();
 		if(top == null) return;
 		if(top.getType() != InventoryType.CHEST) return;
+		long before = System.nanoTime();
 		this.chestTracker.openChest(top, e.getPlayer());
+		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -84,12 +89,14 @@ public class EventListener implements Listener
 		Inventory top = e.getView().getTopInventory();
 		if(top == null) return;
 		if(top.getType() != InventoryType.CHEST) return;
+		long before = System.nanoTime();
 		HumanEntity player = e.getPlayer();
 		if(this.checker.isMoney(player.getItemOnCursor()) != null)
 		{
 			this.closeChestItemDropCheck.add(player);
 		}
 		this.chestTracker.closeChest(top, player);
+		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -98,7 +105,7 @@ public class EventListener implements Listener
 		if(e.isCancelled()) return;
 		for(Block b : e.blockList())
 		{
-			this.chestTracker.blockBreak(b);
+			this.chestTracker.destroyBlock(b);
 		}
 
 	}
@@ -107,8 +114,10 @@ public class EventListener implements Listener
 	public void onBlockBreak(BlockBreakEvent e)
 	{
 		if(e.isCancelled()) return;
+		long before = System.nanoTime();
 		Block b = e.getBlock();
-		this.chestTracker.blockBreak(b);
+		this.chestTracker.destroyBlock(b);
+		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -164,6 +173,7 @@ public class EventListener implements Listener
 			return;
 		}
 		this.chestTracker.dropMoney(p, money.value * stack.getAmount());
+		//this.itemTracker.playerDropMoney(p, e.getItemDrop());
     }
 	
 	@EventHandler(priority = EventPriority.MONITOR)
