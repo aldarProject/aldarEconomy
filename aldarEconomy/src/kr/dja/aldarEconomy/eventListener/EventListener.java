@@ -71,7 +71,7 @@ public class EventListener implements Listener
 		if(e.isCancelled()) return;
 		Inventory top = e.getView().getTopInventory();
 		if(top == null) return;
-		if(!this.checker.isAllowdInventory(top)) return;
+		if(!(top.getType() == InventoryType.CHEST || top.getType() == InventoryType.ENDER_CHEST)) return;
 		long before = System.nanoTime();
 		this.chestTracker.openChest(top, e.getPlayer());
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
@@ -82,7 +82,8 @@ public class EventListener implements Listener
 	{
 		Inventory top = e.getView().getTopInventory();
 		if(top == null) return;
-		if(!this.checker.isAllowdInventory(top)) return;
+		if(!(top.getType() == InventoryType.CHEST || top.getType() == InventoryType.ENDER_CHEST)) return;
+		
 		long before = System.nanoTime();
 		HumanEntity player = e.getPlayer();
 		if(this.checker.isMoney(player.getItemOnCursor()) != null)

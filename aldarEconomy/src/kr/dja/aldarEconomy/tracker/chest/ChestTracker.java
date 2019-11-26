@@ -129,7 +129,6 @@ public class ChestTracker
 
 	public void closeChest(Inventory chest, HumanEntity player)
 	{
-	
 		OpenedChestMoneyInfo info = this.getMoneyInfo(chest);
 
 		if(info == null)
