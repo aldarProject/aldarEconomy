@@ -2,17 +2,12 @@ package kr.dja.aldarEconomy.eventListener;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.Chest;
-import org.bukkit.block.Container;
-import org.bukkit.block.DoubleChest;
 import org.bukkit.craftbukkit.v1_12_R1.block.CraftHopper;
-import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.HumanEntity;
@@ -38,7 +33,6 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -46,8 +40,8 @@ import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 
 import kr.dja.aldarEconomy.ConstraintChecker;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
-import kr.dja.aldarEconomy.tracker.ChestTracker;
 import kr.dja.aldarEconomy.tracker.ItemTracker;
+import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
 
 
 
@@ -77,7 +71,7 @@ public class EventListener implements Listener
 		if(e.isCancelled()) return;
 		Inventory top = e.getView().getTopInventory();
 		if(top == null) return;
-		if(top.getType() != InventoryType.CHEST) return;
+		if(!this.checker.isAllowdInventory(top)) return;
 		long before = System.nanoTime();
 		this.chestTracker.openChest(top, e.getPlayer());
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
@@ -88,7 +82,7 @@ public class EventListener implements Listener
 	{
 		Inventory top = e.getView().getTopInventory();
 		if(top == null) return;
-		if(top.getType() != InventoryType.CHEST) return;
+		if(!this.checker.isAllowdInventory(top)) return;
 		long before = System.nanoTime();
 		HumanEntity player = e.getPlayer();
 		if(this.checker.isMoney(player.getItemOnCursor()) != null)

@@ -11,7 +11,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 
 import kr.dja.aldarEconomy.ConstraintChecker;
-import kr.dja.aldarEconomy.dao.EconomyStateStorage;
+import kr.dja.aldarEconomy.data.EconomyStateStorage;
 import net.minecraft.server.v1_12_R1.NBTTagCompound;
 
 public class ItemTracker
@@ -29,14 +29,7 @@ public class ItemTracker
 	
 	public void playerGainMoney(HumanEntity player, Item item)
 	{
-		List<String> lore = stack.getLore();
-		if(lore != null)
-		{
-			for(int i = 0; i < lore.size(); ++i)
-			{
-				//lore.get(i).split(regex)
-			}
-		}
+
 	}
 	
 	public void playerDropMoney(HumanEntity player, Item item)

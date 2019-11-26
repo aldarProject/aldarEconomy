@@ -1,9 +1,12 @@
-package kr.dja.aldarEconomy.tracker;
+package kr.dja.aldarEconomy.tracker.chest;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,20 +25,21 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import kr.dja.aldarEconomy.ConstraintChecker;
-import kr.dja.aldarEconomy.dao.IntLocation;
-import kr.dja.aldarEconomy.dataObject.multiKeyStorage.EconomyMapChild;
-import kr.dja.aldarEconomy.dataObject.multiKeyStorage.MultipleEconomyMap;
+import kr.dja.aldarEconomy.dataObject.container.IntLocation;
+import kr.dja.aldarEconomy.dataObject.container.chest.ChestEconomyChild;
+import kr.dja.aldarEconomy.dataObject.container.chest.ChestEconomyStorage;
+import kr.dja.aldarEconomy.dataObject.container.chest.ChestWallet;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 
 public class ChestTracker
 {// 창고에 누가 얼마 넣었고 누가 얼마 뺐는지 추적
 	private final ConstraintChecker checker;
-	private final MultipleEconomyMap<IntLocation, UUID> chestDependEconomy;
+	private final ChestEconomyStorage chestDependEconomy;
 	private final Logger logger;
 	
 	private final Map<Inventory, OpenedChestMoneyInfo> openedChestInv;
 	
-	public ChestTracker(ConstraintChecker checker, MultipleEconomyMap<IntLocation, UUID> chestDependEconomy, Logger logger)
+	public ChestTracker(ConstraintChecker checker, ChestEconomyStorage chestDependEconomy, Logger logger)
 	{
 		this.checker = checker;
 		this.chestDependEconomy = chestDependEconomy;
@@ -83,14 +87,33 @@ public class ChestTracker
 	{
 		Inventory openInv = player.getOpenInventory().getTopInventory();
 		if(openInv == null) return;
-		this.accessChestGainMoney(openInv, player, amount);
+		
+		OpenedChestMoneyInfo info = this.getMoneyInfo(openInv);
+		if(info == null) return;
+		int playerMoney = info.playerMoneyMap.getOrDefault(player, -1);
+		if(playerMoney == -1)
+		{
+			this.logger.log(Level.WARNING, "accessChestGainItem 추적 실패");
+			return;
+		}
+		
+		info.playerMoneyMap.put(player, playerMoney + amount);
 	}
 	
 	public void dropMoney(HumanEntity player, int amount)
 	{
 		Inventory openInv = player.getOpenInventory().getTopInventory();
 		if(openInv == null) return;
-		this.accessChestDropMoney(openInv, player, amount);
+		OpenedChestMoneyInfo info = this.getMoneyInfo(openInv);
+		if(info == null) return;
+		int playerMoney = info.playerMoneyMap.getOrDefault(player, -1);
+		if(playerMoney == -1)
+		{
+			this.logger.log(Level.WARNING, "accessChestDropItem 추적 실패");
+			return;
+		}
+		info.playerMoneyMap.put(player, playerMoney - amount);
+		this.chestMoneyCounting(info);
 	}
 	
 	public void openChest(Inventory chest, HumanEntity player)
@@ -106,6 +129,7 @@ public class ChestTracker
 
 	public void closeChest(Inventory chest, HumanEntity player)
 	{
+	
 		OpenedChestMoneyInfo info = this.getMoneyInfo(chest);
 
 		if(info == null)
@@ -122,7 +146,7 @@ public class ChestTracker
 		}
 	}
 	
-	private void chestToPlayer(EconomyMapChild<IntLocation, UUID> map, UUID playerUID, int amount)
+	private void chestToPlayerAction(ChestEconomyChild map, UUID playerUID, int amount)
 	{
 		int playerMoney = map.getMoney(playerUID);
 		int otherMoney = amount - playerMoney;
@@ -142,15 +166,15 @@ public class ChestTracker
 			// 만약 플레이어가 넣은 돈보다 많이 꺼내갔을 경우 가장 적은 돈을 넣은 플레이어의 돈부터 가져가도록 함.
 			int leftMoney = otherMoney;
 			
-			List<Map.Entry<UUID, Integer>> list = new LinkedList<>(map.eMap.entrySet());
-			list.sort((o1, o2)->o1.getValue() - o2.getValue());
+			List<ChestWallet> list = new LinkedList<>(map.eMap.values());
+			Collections.sort(list);
 			
-			for(Map.Entry<UUID, Integer> entry : list)
+			for(ChestWallet wallet : list)
 			{
-				UUID key = entry.getKey();
-				int value = entry.getValue();
+				UUID key = wallet.depend;
+				int money = wallet.getMoney();
 				if(key.equals(playerUID)) continue;
-				if(leftMoney - value <= 0)
+				if(leftMoney - money <= 0)
 				{
 					map.decreaseEconomy(key, leftMoney);
 					Bukkit.getServer().broadcastMessage(String.format("PlayerChestTrade %s to %s -%d(%d)",Bukkit.getPlayer(key).getName(), Bukkit.getPlayer(playerUID).getName(), leftMoney, map.getTotalMoney()));
@@ -158,54 +182,53 @@ public class ChestTracker
 				}
 				else
 				{
-					map.decreaseEconomy(key, value);
-					Bukkit.getServer().broadcastMessage(String.format("PlayerChestTrade %s to %s -%d(%d)",Bukkit.getPlayer(key).getName(), Bukkit.getPlayer(playerUID).getName(), value, map.getTotalMoney()));
-					leftMoney -= value;
+					map.decreaseEconomy(key, money);
+					Bukkit.getServer().broadcastMessage(String.format("PlayerChestTrade %s to %s -%d(%d)",Bukkit.getPlayer(key).getName(), Bukkit.getPlayer(playerUID).getName(), money, map.getTotalMoney()));
+					leftMoney -= money;
 				}
 			}
 		}
 	}
 	
-	private void chestToPlayer(DoubleChest chest, HumanEntity player, int amount)
+	private void doubleChestToPlayer(DoubleChest chest, HumanEntity player, int amount)
 	{
-		EconomyMapChild<IntLocation, UUID> map = this.takeDoubleChest(chest);
+		ChestEconomyChild map = this.takeDoubleChest(chest);
 		if(map == null)
 		{//유저가 존재하지도 않는 돈을 꺼내가려고 할 때
 			logger.log(Level.WARNING, String.format("EconomyDataStorage.chestToPlayer(): %s %s 존재하지 않는 돈 꺼냄(%d)", player.getName(), chest.getLocation(), amount));
 			return;
 		}
-		else
-		{
-			this.chestToPlayer(map, player.getUniqueId(), amount);
-		}
+
+		this.chestToPlayerAction(map, player.getUniqueId(), amount);
+
 	}
 	
 	private void chestToPlayer(Chest chest, HumanEntity player, int amount)
 	{
 		IntLocation loc = new IntLocation(chest.getLocation());
-		EconomyMapChild<IntLocation, UUID> map = this.chestDependEconomy.eMap.get(loc);
+		ChestEconomyChild map = this.chestDependEconomy.eMap.get(loc);
 		if(map == null)
 		{//유저가 존재하지도 않는 돈을 꺼내가려고 할 때
 			logger.log(Level.WARNING, String.format("EconomyDataStorage.chestToPlayer(): %s %s 존재하지 않는 돈 꺼냄(%d)", player.getName(), amount));
 			return;
 		}
-		this.chestToPlayer(map, player.getUniqueId(), amount);
+		this.chestToPlayerAction(map, player.getUniqueId(), amount);
 	}
 	
 	private void playerToChest(HumanEntity player, Chest chest, int amount)
 	{
 		IntLocation loc = new IntLocation(chest.getLocation());
-		EconomyMapChild<IntLocation, UUID> map = this.chestDependEconomy.increaseEconomy(loc, player.getUniqueId(), amount);
+		ChestEconomyChild map = this.chestDependEconomy.increaseEconomy(loc, player.getUniqueId(), amount);
 		Bukkit.getServer().broadcastMessage(String.format("PlayerToChest %s %s +%d(%d)", player.getName(), loc, amount, map.getTotalMoney()));
 	}
 	
-	private void playerToChest(HumanEntity player, DoubleChest chest, int amount)
+	private void playerToDoubleChest(HumanEntity player, DoubleChest chest, int amount)
 	{
-		EconomyMapChild<IntLocation, UUID> takeMap = this.takeDoubleChest(chest);
+		ChestEconomyChild takeMap = this.takeDoubleChest(chest);
 		DoubleChestInventory inv = (DoubleChestInventory)chest.getInventory();
 		IntLocation leftLoc = new IntLocation(inv.getLeftSide().getLocation());
 		IntLocation rightLoc = new IntLocation(inv.getRightSide().getLocation());
-		EconomyMapChild<IntLocation, UUID> increaseMap = this.chestDependEconomy.increaseEconomy(leftLoc, player.getUniqueId(), amount);
+		ChestEconomyChild increaseMap = this.chestDependEconomy.increaseEconomy(leftLoc, player.getUniqueId(), amount);
 		if(takeMap == null)
 		{
 			this.chestDependEconomy.appendKey(rightLoc, increaseMap);
@@ -216,7 +239,7 @@ public class ChestTracker
 	private void destoryChest(Block chest, int amount)
 	{
 		IntLocation chestLoc = new IntLocation(chest.getLocation());
-		EconomyMapChild<IntLocation, UUID> map = this.chestDependEconomy.eMap.get(chestLoc);
+		ChestEconomyChild map = this.chestDependEconomy.eMap.get(chestLoc);
 		if(map == null)
 		{
 			if(amount > 0)
@@ -234,14 +257,14 @@ public class ChestTracker
 		Bukkit.getServer().broadcastMessage(String.format("ChestBreak %s", chestLoc, amount));
 		// 만약 플레이어가 넣은 돈보다 많이 꺼내갔을 경우 가장 적은 돈을 넣은 플레이어의 돈부터 가져가도록 함.
 		
-		List<Map.Entry<UUID, Integer>> list = new LinkedList<>(map.eMap.entrySet());
-		list.sort((o1, o2)->o1.getValue() - o2.getValue());
+		List<ChestWallet> list = new LinkedList<>(map.eMap.values());
+		Collections.sort(list);
 		int leftMoney = amount;
-		for(Map.Entry<UUID, Integer> entry : list)
+		for(ChestWallet wallet : list)
 		{
-			UUID key = entry.getKey();
-			int value = entry.getValue();
-			if(leftMoney - value <= 0)
+			UUID key = wallet.depend;
+			int money = wallet.getMoney();
+			if(leftMoney - money <= 0)
 			{
 				map.decreaseEconomy(key, leftMoney);
 				Bukkit.getServer().broadcastMessage(String.format("ChestToField %s (%d)",Bukkit.getPlayer(key).getName(), leftMoney));
@@ -249,17 +272,17 @@ public class ChestTracker
 			}
 			else
 			{
-				map.decreaseEconomy(key, value);
-				Bukkit.getServer().broadcastMessage(String.format("ChestToField %s (%d)",Bukkit.getPlayer(key).getName(), value));
-				leftMoney -= value;
+				map.decreaseEconomy(key, money);
+				Bukkit.getServer().broadcastMessage(String.format("ChestToField %s (%d)",Bukkit.getPlayer(key).getName(), money));
+				leftMoney -= money;
 			}
 		}
 		this.chestDependEconomy.delKey(chestLoc);
 	}
 	
-	private EconomyMapChild<IntLocation, UUID> takeDoubleChest(DoubleChest chest)
+	private ChestEconomyChild takeDoubleChest(DoubleChest chest)
 	{
-		EconomyMapChild<IntLocation, UUID> map;
+		ChestEconomyChild map;
 		DoubleChestInventory inv = (DoubleChestInventory) chest.getInventory();
 		IntLocation lLoc = new IntLocation(inv.getLeftSide().getLocation());
 		IntLocation rLoc = new IntLocation(inv.getRightSide().getLocation());
@@ -282,34 +305,6 @@ public class ChestTracker
 		return map;
 	}
 	
-	private void accessChestGainMoney(Inventory chest, HumanEntity player, int amount)
-	{
-		OpenedChestMoneyInfo info = this.getMoneyInfo(chest);
-		if(info == null) return;
-		int playerMoney = info.playerMoneyMap.getOrDefault(player, -1);
-		if(playerMoney == -1)
-		{
-			this.logger.log(Level.WARNING, "accessChestGainItem 추적 실패");
-			return;
-		}
-		
-		info.playerMoneyMap.put(player, playerMoney + amount);
-	}
-	
-	private void accessChestDropMoney(Inventory chest, HumanEntity player, int amount)
-	{
-		OpenedChestMoneyInfo info = this.getMoneyInfo(chest);
-		if(info == null) return;
-		int playerMoney = info.playerMoneyMap.getOrDefault(player, -1);
-		if(playerMoney == -1)
-		{
-			this.logger.log(Level.WARNING, "accessChestDropItem 추적 실패");
-			return;
-		}
-		info.playerMoneyMap.put(player, playerMoney - amount);
-		this.chestMoneyCounting(info);
-	}
-	
 	private void chestMoneyCounting(OpenedChestMoneyInfo info)
 	{
 		int beforeChestMoney = info.chestMoney;
@@ -324,7 +319,7 @@ public class ChestTracker
 			{
 				if(holder instanceof DoubleChest)
 				{
-					this.playerToChest(lookupPlayer, (DoubleChest)holder, playerBeforeMoney - playerNowMoney);
+					this.playerToDoubleChest(lookupPlayer, (DoubleChest)holder, playerBeforeMoney - playerNowMoney);
 				}
 				else if(holder instanceof Chest)
 				{
@@ -339,7 +334,7 @@ public class ChestTracker
 			{
 				if(holder instanceof DoubleChest)
 				{
-					this.chestToPlayer((DoubleChest)holder, lookupPlayer, playerNowMoney - playerBeforeMoney);
+					this.doubleChestToPlayer((DoubleChest)holder, lookupPlayer, playerNowMoney - playerBeforeMoney);
 				}
 				else if(holder instanceof Chest)
 				{
@@ -450,16 +445,4 @@ public class ChestTracker
 		}
 	}
 
-}
-
-class OpenedChestMoneyInfo
-{
-	public Inventory masterInven;// 현재 접근중인 인벤토리의 주 인벤토리(더블 체스트 고려)
-	public int chestMoney;
-	public final Map<HumanEntity, Integer> playerMoneyMap;
-	
-	public OpenedChestMoneyInfo()
-	{
-		this.playerMoneyMap = new HashMap<>();
-	}
 }
