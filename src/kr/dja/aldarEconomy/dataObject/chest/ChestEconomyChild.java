@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.dataObject.container.chest;
+package kr.dja.aldarEconomy.dataObject.chest;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import kr.dja.aldarEconomy.dataObject.Wallet;
-import kr.dja.aldarEconomy.dataObject.container.IntLocation;
+import kr.dja.aldarEconomy.dataObject.DependType;
+import kr.dja.aldarEconomy.dataObject.IntLocation;
 
 
 public class ChestEconomyChild
@@ -31,13 +31,13 @@ public class ChestEconomyChild
 		this.parents = new HashSet<>();
 	}
 
-	public void increaseEconomy(UUID key, int amount)
+	public void increaseEconomy(UUID key, int amount, DependType type)
 	{
 		this.totalMoney += amount;
 		ChestWallet wallet = this._eMap.get(key);
 		if(wallet == null)
 		{
-			wallet = new ChestWallet(key);
+			wallet = new ChestWallet(key, type);
 			wallet.setMoney(amount);
 			this._eMap.put(key, wallet);
 		}

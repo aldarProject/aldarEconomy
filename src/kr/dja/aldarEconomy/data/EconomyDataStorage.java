@@ -10,17 +10,16 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import kr.dja.aldarEconomy.dataObject.container.IntLocation;
-import kr.dja.aldarEconomy.dataObject.container.chest.ChestEconomyChild;
-import kr.dja.aldarEconomy.dataObject.container.chest.ChestEconomyStorage;
-import kr.dja.aldarEconomy.dataObject.container.chest.ChestWallet;
-import kr.dja.aldarEconomy.dataObject.container.chest.IChestObserver;
-import kr.dja.aldarEconomy.dataObject.container.enderChest.EnderChestEconomyStorage;
-import kr.dja.aldarEconomy.dataObject.container.enderChest.EnderChestWallet;
-import kr.dja.aldarEconomy.dataObject.itemEntity.player.ItemPlayerEconomyStorage;
-import kr.dja.aldarEconomy.dataObject.itemEntity.player.ItemPlayerWallet;
-import kr.dja.aldarEconomy.dataObject.itemEntity.system.ItemSystemEconomyStorage;
-import kr.dja.aldarEconomy.dataObject.itemEntity.system.ItemSystemWallet;
+import kr.dja.aldarEconomy.dataObject.DependType;
+import kr.dja.aldarEconomy.dataObject.IntLocation;
+import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
+import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyStorage;
+import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
+import kr.dja.aldarEconomy.dataObject.chest.IChestObserver;
+import kr.dja.aldarEconomy.dataObject.enderChest.EnderChestEconomyStorage;
+import kr.dja.aldarEconomy.dataObject.enderChest.EnderChestWallet;
+import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyStorage;
+import kr.dja.aldarEconomy.dataObject.itemEntity.ItemWallet;
 import kr.dja.aldarEconomy.dataObject.player.PlayerEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.player.PlayerWallet;
 import kr.dja.aldarEconomy.dataObject.system.SystemEconomyStorage;
@@ -40,8 +39,7 @@ public class EconomyDataStorage
 	public final SystemEconomyStorage systemDependEconomy;
 	public final PlayerEconomyStorage playerDependEconomy;
 	public final EnderChestEconomyStorage playerEnderChestEconomy;
-	public final ItemPlayerEconomyStorage itemDependEconomyPlayer;
-	public final ItemSystemEconomyStorage itemDependEconomySystem;
+	public final ItemEconomyStorage itemEconomyStorage;
 	
 	public EconomyDataStorage(MoneyInfo moneyInfo, TradeTracker tradeTracker, Logger logger)
 	{
@@ -55,8 +53,7 @@ public class EconomyDataStorage
 		this.systemDependEconomy = new SystemEconomyStorage(this::onModifySystemMoney);
 		this.playerDependEconomy = new PlayerEconomyStorage(this::onModifyPlayerMoney);
 		this.playerEnderChestEconomy = new EnderChestEconomyStorage(this::onModifyEnderChestMoney);
-		this.itemDependEconomySystem = new ItemSystemEconomyStorage(this::onModifyItemSystemMoney);
-		this.itemDependEconomyPlayer = new ItemPlayerEconomyStorage(this::onModifyItemPlayerMoney);
+		this.itemEconomyStorage = new ItemEconomyStorage(this::onModifyItemMoney);
 	}
 	
 	public long getPlayerMoney(UUID player)
@@ -77,9 +74,11 @@ public class EconomyDataStorage
 		@Override
 		public void modifyMoney(UUID uuid, UUID player, ChestWallet wallet, int amount)
 		{
-			EconomyDataStorage.this.modifyPlayerMoney(player, amount);
-
-			Bukkit.getServer().broadcastMessage(String.format("modifyEconomy %s %s", Bukkit.getPlayer(player).getName(), wallet.getMoney()));
+			if(wallet.dependType == DependType.PLAYER)
+			{
+				EconomyDataStorage.this.modifyPlayerMoney(player, amount);
+				Bukkit.getServer().broadcastMessage(String.format("modifyEconomy %s %s", Bukkit.getPlayer(player).getName(), wallet.getMoney()));
+			}
 		}
 
 		@Override
@@ -92,7 +91,6 @@ public class EconomyDataStorage
 		public void deleteKey(IntLocation loc, ChestEconomyChild obj)
 		{
 			Bukkit.getServer().broadcastMessage(String.format("deleteKey %s", loc));
-			
 		}
 	}
 	
@@ -108,19 +106,18 @@ public class EconomyDataStorage
 	
 	private void onModifyEnderChestMoney(EnderChestWallet wallet, int amount)
 	{
-		this.modifyPlayerMoney(wallet.player, amount);
-	}
-	
-	private void onModifyItemSystemMoney(ItemSystemWallet wallet, int amount)
-	{
 		
-	}
-	
-	private void onModifyItemPlayerMoney(ItemPlayerWallet wallet, int amount)
-	{
 		this.modifyPlayerMoney(wallet.player, amount);
 	}
 	
+	private void onModifyItemMoney(ItemWallet wallet, int amount)
+	{
+		if(wallet.dependType == DependType.PLAYER)
+		{
+			this.modifyPlayerMoney(wallet.depend, amount);
+		}
+	}
+
 	private void modifyPlayerMoney(UUID player, int amount)
 	{
 		PlayerEconomy playerEconomy = this._playerEconomyMap.get(player);
@@ -130,6 +127,10 @@ public class EconomyDataStorage
 			this._playerEconomyMap.put(player, playerEconomy);
 		}
 		playerEconomy.money += amount;
+		if(playerEconomy.money == 0)
+		{
+			this._playerEconomyMap.remove(player);
+		}
 		
 	}
 }

@@ -1,11 +1,12 @@
-package kr.dja.aldarEconomy.dataObject.container.chest;
+package kr.dja.aldarEconomy.dataObject.chest;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import kr.dja.aldarEconomy.dataObject.container.IntLocation;
+import kr.dja.aldarEconomy.dataObject.DependType;
+import kr.dja.aldarEconomy.dataObject.IntLocation;
 
 public class ChestEconomyStorage
 {
@@ -20,7 +21,7 @@ public class ChestEconomyStorage
 		this.eMap = Collections.unmodifiableMap(this._eMap);
 	}
 
-	public ChestEconomyChild increaseEconomy(IntLocation key1, UUID key2, int amount)
+	public ChestEconomyChild increaseEconomy(IntLocation key1, UUID key2, int amount, DependType type)
 	{
 		ChestEconomyChild map = this._eMap.get(key1);
 		if(map == null)
@@ -30,7 +31,7 @@ public class ChestEconomyStorage
 			this._eMap.put(key1, map);
 			this.callback.appendKey(key1, map);
 		}
-		map.increaseEconomy(key2, amount);
+		map.increaseEconomy(key2, amount, type);
 		return map;
 	}
 	
@@ -38,7 +39,7 @@ public class ChestEconomyStorage
 	{
 		ChestEconomyChild map = this._eMap.get(key1);
 		map.decreaseEconomy(key2, amount);
-		if(map.getTotalMoney() <= 0)
+		if(map.getTotalMoney() == 0)
 		{
 			for(IntLocation key : map.parents)
 			{

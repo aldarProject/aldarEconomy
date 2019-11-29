@@ -102,7 +102,6 @@ public class EventListener implements Listener
 		{
 			this.chestTracker.destroyBlock(b);
 		}
-
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -120,13 +119,15 @@ public class EventListener implements Listener
 	{// 아이템 소멸onEntityDamage
 		if(!(e.getEntity() instanceof Item)) return;
 		Item item = (Item) e.getEntity();
-		MoneyMetadata money = this.checker.isMoney(item.getItemStack());
+		ItemStack stack = item.getItemStack();
+		MoneyMetadata money = this.checker.isMoney(stack);
 		if(money == null) return;
 		if(this.destroyCheck.contains(item))
 		{
 			this.destroyCheck.remove(item);
 			return;
 		}
+		this.itemTracker.moneyDespawn(item, money.value * stack.getAmount());
 		//Bukkit.getServer().broadcastMessage("돈소멸" + money.toString());
 		
 	}
@@ -149,10 +150,8 @@ public class EventListener implements Listener
 			HumanEntity p = (HumanEntity)e.getEntity();
 			this.chestTracker.gainMoney((HumanEntity)e.getEntity(), money.value * stack.getAmount());
 			this.destroyCheck.add(e.getItem());
-			this.itemTracker.playerGainMoney(p, e.getItem());
-			//Bukkit.getServer().broadcastMessage("돈픽업");
+			this.itemTracker.playerGainMoney(p, e.getItem(), money.value * stack.getAmount());
 		}
-		
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -162,7 +161,6 @@ public class EventListener implements Listener
 		ItemStack stack = e.getItemDrop().getItemStack();
 		MoneyMetadata money = this.checker.isMoney(stack);
 		if(money == null) return;
-		Bukkit.getServer().broadcastMessage("플레이어아이템버림");
 		Player p = e.getPlayer();
 		if(!this.closeChestItemDropCheck.contains(p))
 		{
@@ -172,7 +170,7 @@ public class EventListener implements Listener
 		{
 			this.closeChestItemDropCheck.remove(p);
 		}
-		this.itemTracker.playerDropMoney(p, e.getItemDrop());
+		this.itemTracker.playerDropMoney(p, e.getItemDrop(), money.value * stack.getAmount());
     }
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -231,8 +229,8 @@ public class EventListener implements Listener
 		if(e.isCancelled()) return;
 		MoneyMetadata money = this.checker.isMoney(e.getEntity().getItemStack());
 		if(money == null) return;
-
 		this.destroyCheck.add(e.getEntity());
+		this.itemTracker.moneyMerge(e.getTarget(), e.getEntity());
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)

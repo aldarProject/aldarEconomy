@@ -2,24 +2,25 @@ package kr.dja.aldarEconomy.api;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class APITokenManager
 {
-	private Map<String, SystemID> idTokenMap;
+	private Map<UUID, SystemID> idTokenMap;
 	
 	public APITokenManager()
 	{
 		this.idTokenMap = new HashMap<>();
 	}
 	
-	public SystemID registerIDToken(String name)
+	public SystemID registerIDToken(UUID id)
 	{
-		SystemID idToken = new SystemID(name);
-		this.idTokenMap.put(name, idToken);
+		SystemID idToken = new SystemID(id);
+		this.idTokenMap.put(id, idToken);
 		return idToken;
 	}
 	
-	public SystemID getIDToken(String id)
+	public SystemID getIDToken(UUID id)
 	{
 		SystemID idToken = this.idTokenMap.getOrDefault(id, null);
 		if(idToken == null)

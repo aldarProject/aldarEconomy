@@ -1,19 +1,21 @@
 package kr.dja.aldarEconomy.api;
 
+import java.util.UUID;
+
 public class SystemID
 {
-	public final String name;
+	public final UUID uuid;
 	
-	SystemID(String uniqueName)
+	SystemID(UUID uuid)
 	{
-		this.name = uniqueName;
+		this.uuid = uuid;
 	}
 	
 	@Override
 	public int hashCode()
 	{
 	    int result = 1;
-	    result = 31 * ((name == null) ? 0 : name.hashCode());
+	    result = 31 * uuid.hashCode();
 	    return result;
 	}
 
@@ -25,7 +27,7 @@ public class SystemID
 			if(obj instanceof SystemID)
 			{
 				SystemID id = (SystemID)obj;
-				if(id.name.equals(this.name)) return true;
+				if(id.uuid.equals(this.uuid)) return true;
 			}
 		}
 		return false;

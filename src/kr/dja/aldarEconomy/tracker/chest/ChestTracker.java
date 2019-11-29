@@ -25,10 +25,11 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import kr.dja.aldarEconomy.ConstraintChecker;
-import kr.dja.aldarEconomy.dataObject.container.IntLocation;
-import kr.dja.aldarEconomy.dataObject.container.chest.ChestEconomyChild;
-import kr.dja.aldarEconomy.dataObject.container.chest.ChestEconomyStorage;
-import kr.dja.aldarEconomy.dataObject.container.chest.ChestWallet;
+import kr.dja.aldarEconomy.dataObject.DependType;
+import kr.dja.aldarEconomy.dataObject.IntLocation;
+import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
+import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyStorage;
+import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
 import kr.dja.aldarEconomy.dataObject.player.PlayerEconomyStorage;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 
@@ -224,7 +225,7 @@ public class ChestTracker
 	private void playerToChest(HumanEntity player, Chest chest, int amount)
 	{
 		IntLocation loc = new IntLocation(chest.getLocation());
-		ChestEconomyChild map = this.chestDependEconomy.increaseEconomy(loc, player.getUniqueId(), amount);
+		ChestEconomyChild map = this.chestDependEconomy.increaseEconomy(loc, player.getUniqueId(), amount, DependType.PLAYER);
 		Bukkit.getServer().broadcastMessage(String.format("PlayerToChest %s %s +%d(%d)", player.getName(), loc, amount, map.getTotalMoney()));
 	}
 	
@@ -234,7 +235,7 @@ public class ChestTracker
 		DoubleChestInventory inv = (DoubleChestInventory)chest.getInventory();
 		IntLocation leftLoc = new IntLocation(inv.getLeftSide().getLocation());
 		IntLocation rightLoc = new IntLocation(inv.getRightSide().getLocation());
-		ChestEconomyChild increaseMap = this.chestDependEconomy.increaseEconomy(leftLoc, player.getUniqueId(), amount);
+		ChestEconomyChild increaseMap = this.chestDependEconomy.increaseEconomy(leftLoc, player.getUniqueId(), amount, DependType.PLAYER);
 		if(takeMap == null)
 		{
 			this.chestDependEconomy.appendKey(rightLoc, increaseMap);

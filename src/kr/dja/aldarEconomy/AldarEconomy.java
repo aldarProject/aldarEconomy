@@ -36,7 +36,7 @@ public class AldarEconomy extends JavaPlugin
 		this.version = this.getDescription().getVersion();
 		this.storage = new EconomyDataStorage(this.configLoader.getMoneyInfo(), null, this.getLogger());
 		this.chestTracker = new ChestTracker(this.constraintChecker, this.storage.chestDependEconomy, this.storage.playerDependEconomy, this.getLogger());
-		this.itemTracker = new ItemTracker(this.constraintChecker, this.storage, this.getLogger());
+		this.itemTracker = new ItemTracker(this.storage.itemEconomyStorage, this.storage.playerDependEconomy, this.getLogger());
 		this.eventListener = new EventListener(this.constraintChecker, this.chestTracker, this.itemTracker, this.getLogger());
 
 		this.pluginManager = this.getServer().getPluginManager();
@@ -49,7 +49,8 @@ public class AldarEconomy extends JavaPlugin
 	}
 	
 	@Override
-	public void onDisable(){
+	public void onDisable()
+	{
 		this.getLogger().info("Aldar Economy"+version+" disabled by camelCase");
 	}
 	
