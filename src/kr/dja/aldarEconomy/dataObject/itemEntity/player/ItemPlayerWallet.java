@@ -8,9 +8,9 @@ public class ItemPlayerWallet extends Wallet<UUID>
 {
 	public final UUID player;
 	
-	ItemPlayerWallet(UUID item, UUID player, int money)
+	ItemPlayerWallet(UUID item, UUID player)
 	{
-		super(item, money);
+		super(item);
 		this.player = player;
 	}
 	

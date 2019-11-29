@@ -5,9 +5,9 @@ public abstract class Wallet<Depend> implements Comparable<Wallet<Depend>>
 	protected int money;
 	public final Depend depend;
 	
-	public Wallet(Depend depend, int money)
+	public Wallet(Depend depend)
 	{
-		this.money = money;
+		this.money = 0;
 		this.depend = depend;
 	}
 	

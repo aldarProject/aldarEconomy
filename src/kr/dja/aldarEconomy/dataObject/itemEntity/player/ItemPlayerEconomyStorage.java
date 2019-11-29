@@ -20,12 +20,8 @@ public class ItemPlayerEconomyStorage extends EconomyMap<UUID, ItemPlayerWallet>
 		ItemPlayerWallet wallet = this.eMap.get(key);
 		if(wallet == null)
 		{
-			wallet = new ItemPlayerWallet(key, id, amount);
-			this.increaseEconomy(wallet, amount, true);
+			wallet = new ItemPlayerWallet(key, id);
 		}
-		else
-		{
-			this.increaseEconomy(wallet, amount, false);
-		}
+		this.increaseEconomy(wallet, amount);
 	}
 }

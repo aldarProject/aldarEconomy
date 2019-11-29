@@ -13,17 +13,13 @@ public class PlayerEconomyStorage extends EconomyMap<UUID, PlayerWallet>
 		super(callback);
 	}
 
-	protected void increaseEconomy(UUID key, int amount)
+	public void increaseEconomy(UUID key, int amount)
 	{
 		PlayerWallet wallet = this.eMap.get(key);
 		if(wallet == null)
 		{
-			wallet = new PlayerWallet(key, amount);
-			this.increaseEconomy(wallet, amount, true);
+			wallet = new PlayerWallet(key);
 		}
-		else
-		{
-			this.increaseEconomy(wallet, amount, false);
-		}
+		this.increaseEconomy(wallet, amount);
 	}
 }

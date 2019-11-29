@@ -6,11 +6,11 @@ import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import kr.dja.aldarEconomy.data.EconomyStateStorage;
+import kr.dja.aldarEconomy.data.EconomyDataStorage;
 import kr.dja.aldarEconomy.eventListener.EventListener;
 import kr.dja.aldarEconomy.setting.ConfigLoader;
-import kr.dja.aldarEconomy.tracker.ItemTracker;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
+import kr.dja.aldarEconomy.tracker.item.ItemTracker;
 
 public class AldarEconomy extends JavaPlugin
 {
@@ -20,7 +20,7 @@ public class AldarEconomy extends JavaPlugin
 	private PluginManager pluginManager;
 	private ConfigLoader configLoader;
 	private ConstraintChecker constraintChecker;
-	private EconomyStateStorage storage;
+	private EconomyDataStorage storage;
 	private EventListener eventListener;
 	private ChestTracker chestTracker;
 	private ItemTracker itemTracker;
@@ -34,8 +34,8 @@ public class AldarEconomy extends JavaPlugin
 		
 		this.constraintChecker = new ConstraintChecker(this.configLoader.getMoneyInfo());
 		this.version = this.getDescription().getVersion();
-		this.storage = new EconomyStateStorage(this.configLoader.getMoneyInfo(), null, this.getLogger());
-		this.chestTracker = new ChestTracker(this.constraintChecker, this.storage.chestDependEconomy, this.getLogger());
+		this.storage = new EconomyDataStorage(this.configLoader.getMoneyInfo(), null, this.getLogger());
+		this.chestTracker = new ChestTracker(this.constraintChecker, this.storage.chestDependEconomy, this.storage.playerDependEconomy, this.getLogger());
 		this.itemTracker = new ItemTracker(this.constraintChecker, this.storage, this.getLogger());
 		this.eventListener = new EventListener(this.constraintChecker, this.chestTracker, this.itemTracker, this.getLogger());
 

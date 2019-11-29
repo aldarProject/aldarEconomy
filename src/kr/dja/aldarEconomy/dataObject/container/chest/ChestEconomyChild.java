@@ -34,19 +34,19 @@ public class ChestEconomyChild
 	public void increaseEconomy(UUID key, int amount)
 	{
 		this.totalMoney += amount;
-		if(this._eMap.containsKey(key))
+		ChestWallet wallet = this._eMap.get(key);
+		if(wallet == null)
 		{
-			ChestWallet wallet = this._eMap.get(key);
-			
-			wallet.setMoney(wallet.getMoney() + amount);
-			this.callback.increaseEconomy(this.uuid, key, wallet, false);
+			wallet = new ChestWallet(key);
+			wallet.setMoney(amount);
+			this._eMap.put(key, wallet);
 		}
 		else
 		{
-			ChestWallet wallet = new ChestWallet(key, amount);
-			this._eMap.put(key, wallet);
-			this.callback.increaseEconomy(this.uuid, key, wallet, true);
+			wallet.setMoney(wallet.getMoney() + amount);
 		}
+		
+		this.callback.modifyMoney(this.uuid, key, wallet, amount);
 	}
 	
 	public void decreaseEconomy(UUID key, int amount)
@@ -57,17 +57,13 @@ public class ChestEconomyChild
 		if(wallet.getMoney() == 0)
 		{
 			this._eMap.remove(key);
-			this.callback.decreaseEconomy(this.uuid, key, wallet, true);
 		}
-		else
-		{
-			this.callback.decreaseEconomy(this.uuid, key, wallet, false);
-		}
+		this.callback.modifyMoney(this.uuid, key, wallet, -amount);
 	}
 	
 	public int getMoney(UUID key)
 	{
-		Wallet wallet = this._eMap.get(key);
+		ChestWallet wallet = this._eMap.get(key);
 		if(wallet == null) return 0;
 		return wallet.getMoney();
 	}

@@ -5,9 +5,9 @@ import kr.dja.aldarEconomy.dataObject.Wallet;
 
 public class SystemWallet extends Wallet<SystemID>
 {
-	SystemWallet(SystemID id, int money)
+	SystemWallet(SystemID id)
 	{
-		super(id, money);
+		super(id);
 	}
 	
 	void setMoney(int money)

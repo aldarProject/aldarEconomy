@@ -29,20 +29,23 @@ import kr.dja.aldarEconomy.dataObject.container.IntLocation;
 import kr.dja.aldarEconomy.dataObject.container.chest.ChestEconomyChild;
 import kr.dja.aldarEconomy.dataObject.container.chest.ChestEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.container.chest.ChestWallet;
+import kr.dja.aldarEconomy.dataObject.player.PlayerEconomyStorage;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 
 public class ChestTracker
 {// 창고에 누가 얼마 넣었고 누가 얼마 뺐는지 추적
 	private final ConstraintChecker checker;
 	private final ChestEconomyStorage chestDependEconomy;
+	private final PlayerEconomyStorage playerDependEconomy;
 	private final Logger logger;
 	
 	private final Map<Inventory, OpenedChestMoneyInfo> openedChestInv;
 	
-	public ChestTracker(ConstraintChecker checker, ChestEconomyStorage chestDependEconomy, Logger logger)
+	public ChestTracker(ConstraintChecker checker, ChestEconomyStorage chestDependEconomy, PlayerEconomyStorage playerDependEconomy, Logger logger)
 	{
 		this.checker = checker;
 		this.chestDependEconomy = chestDependEconomy;
+		this.playerDependEconomy = playerDependEconomy;
 		this.logger = logger;
 		this.openedChestInv = new HashMap<>();
 	}
@@ -152,11 +155,13 @@ public class ChestTracker
 		if(otherMoney <= 0)
 		{// 창고에서 자신이 넣은만큼만 꺼내갔을 경우
 			map.decreaseEconomy(playerUID, amount);
-			Bukkit.getServer().broadcastMessage(String.format("PlayerAccess %s (%d)",Bukkit.getPlayer(playerUID).getName(), amount));
+			this.playerDependEconomy.increaseEconomy(playerUID, amount);
+			Bukkit.getServer().broadcastMessage(String.format("ChestToPlayer %s (%d)",Bukkit.getPlayer(playerUID).getName(), amount));
 		}
 		else
 		{// 창고에 남이 넣은 돈까지 꺼내가는 경우
 			map.decreaseEconomy(playerUID, playerMoney);
+			this.playerDependEconomy.increaseEconomy(playerUID, amount);
 			if(map.getTotalMoney() - otherMoney < 0)
 			{
 				logger.log(Level.WARNING, String.format("EconomyDataStorage.chestToPlayer(): %s 존재하는 돈보다 많이 꺼냄(%d)", Bukkit.getPlayer(playerUID).getName(), map.getTotalMoney() - amount));
@@ -176,12 +181,14 @@ public class ChestTracker
 				if(leftMoney - money <= 0)
 				{
 					map.decreaseEconomy(key, leftMoney);
+					this.playerDependEconomy.decreaseEconomy(key, leftMoney);
 					Bukkit.getServer().broadcastMessage(String.format("PlayerChestTrade %s to %s -%d(%d)",Bukkit.getPlayer(key).getName(), Bukkit.getPlayer(playerUID).getName(), leftMoney, map.getTotalMoney()));
 					break;
 				}
 				else
 				{
 					map.decreaseEconomy(key, money);
+					this.playerDependEconomy.decreaseEconomy(key, money);
 					Bukkit.getServer().broadcastMessage(String.format("PlayerChestTrade %s to %s -%d(%d)",Bukkit.getPlayer(key).getName(), Bukkit.getPlayer(playerUID).getName(), money, map.getTotalMoney()));
 					leftMoney -= money;
 				}

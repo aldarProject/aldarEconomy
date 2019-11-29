@@ -40,8 +40,8 @@ import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 
 import kr.dja.aldarEconomy.ConstraintChecker;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
-import kr.dja.aldarEconomy.tracker.ItemTracker;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
+import kr.dja.aldarEconomy.tracker.item.ItemTracker;
 
 
 
@@ -146,8 +146,10 @@ public class EventListener implements Listener
 		LivingEntity entity = e.getEntity();
 		if(entity instanceof HumanEntity)
 		{
+			HumanEntity p = (HumanEntity)e.getEntity();
 			this.chestTracker.gainMoney((HumanEntity)e.getEntity(), money.value * stack.getAmount());
 			this.destroyCheck.add(e.getItem());
+			this.itemTracker.playerGainMoney(p, e.getItem());
 			//Bukkit.getServer().broadcastMessage("돈픽업");
 		}
 		
@@ -162,13 +164,15 @@ public class EventListener implements Listener
 		if(money == null) return;
 		Bukkit.getServer().broadcastMessage("플레이어아이템버림");
 		Player p = e.getPlayer();
-		if(this.closeChestItemDropCheck.contains(p))
+		if(!this.closeChestItemDropCheck.contains(p))
+		{
+			this.chestTracker.dropMoney(p, money.value * stack.getAmount());
+		}
+		else
 		{
 			this.closeChestItemDropCheck.remove(p);
-			return;
 		}
-		this.chestTracker.dropMoney(p, money.value * stack.getAmount());
-		//this.itemTracker.playerDropMoney(p, e.getItemDrop());
+		this.itemTracker.playerDropMoney(p, e.getItemDrop());
     }
 	
 	@EventHandler(priority = EventPriority.MONITOR)

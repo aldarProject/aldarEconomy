@@ -11,7 +11,6 @@ public abstract class EconomyMap<Depend, WalletType extends Wallet<Depend>>
 	public final Map<Depend, WalletType> eMap;
 	private int totalMoney;
 	
-	
 	public EconomyMap(IEconomyObserver<Depend, WalletType> callback)
 	{
 		this.callback = callback;
@@ -20,17 +19,18 @@ public abstract class EconomyMap<Depend, WalletType extends Wallet<Depend>>
 		this.totalMoney = 0;
 	}
 
-	protected void increaseEconomy(WalletType wallet, int amount, boolean isNew)
+	protected void increaseEconomy(WalletType wallet, int amount)
 	{
-		if(isNew)
+		if(!this._eMap.containsKey(wallet.depend))
 		{
 			this._eMap.put(wallet.depend, wallet);
 		}
+		wallet.money += amount;
 		this.totalMoney += amount;
-		this.callback.modifyMoney(wallet, isNew);
+		this.callback.modifyMoney(wallet, amount);
 	}
 	
-	protected void decreaseEconomy(Depend key, int amount)
+	public void decreaseEconomy(Depend key, int amount)
 	{
 		WalletType wallet = this._eMap.get(key);
 		wallet.money -= amount;
@@ -39,7 +39,7 @@ public abstract class EconomyMap<Depend, WalletType extends Wallet<Depend>>
 		{
 			this._eMap.remove(key);
 		}
-		this.callback.modifyMoney(wallet, false);
+		this.callback.modifyMoney(wallet, -amount);
 	}
 	
 	public int getMoney(Depend obj)

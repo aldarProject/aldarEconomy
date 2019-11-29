@@ -21,11 +21,9 @@ public class ItemSystemEconomyStorage extends EconomyMap<UUID, ItemSystemWallet>
 		if(wallet == null)
 		{
 			wallet = new ItemSystemWallet(key, id, amount);
-			this.increaseEconomy(wallet, amount, true);
 		}
-		else
-		{
-			this.increaseEconomy(wallet, amount, false);
-		}
+		
+		this.increaseEconomy(wallet, amount);
+		
 	}
 }

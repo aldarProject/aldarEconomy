@@ -6,9 +6,9 @@ import kr.dja.aldarEconomy.dataObject.Wallet;
 
 public class PlayerWallet extends Wallet<UUID>
 {
-	PlayerWallet(UUID id, int money)
+	PlayerWallet(UUID id)
 	{
-		super(id, money);
+		super(id);
 	}
 	
 	void setMoney(int money)

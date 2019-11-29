@@ -17,13 +17,8 @@ public class SystemEconomyStorage extends EconomyMap<SystemID, SystemWallet>
 		SystemWallet wallet = this.eMap.get(key);
 		if(wallet == null)
 		{
-			wallet = new SystemWallet(key, amount);
-			this.increaseEconomy(wallet, amount, true);
+			wallet = new SystemWallet(key);
 		}
-		else
-		{
-			this.increaseEconomy(wallet, amount, false);
-		}
-		
+		this.increaseEconomy(wallet, amount);
 	}
 }

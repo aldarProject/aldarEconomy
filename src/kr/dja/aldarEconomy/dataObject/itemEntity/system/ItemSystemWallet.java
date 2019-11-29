@@ -11,7 +11,7 @@ public class ItemSystemWallet extends Wallet<UUID>
 	
 	ItemSystemWallet(UUID item, SystemID systemID, int money)
 	{
-		super(item, money);
+		super(item);
 		this.systemID = systemID;
 	}
 	

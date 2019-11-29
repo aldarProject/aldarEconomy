@@ -16,17 +16,14 @@ public class EnderChestEconomyStorage extends EconomyMap<IntLocation, EnderChest
 		super(callback);
 	}
 
-	protected void increaseEconomy(IntLocation key, int amount)
+	public void increaseEconomy(IntLocation key, UUID player, int amount)
 	{
 		EnderChestWallet wallet = this.eMap.get(key);
 		if(wallet == null)
 		{
-			wallet = new EnderChestWallet(key, amount);
-			this.increaseEconomy(wallet, amount, true);
+			wallet = new EnderChestWallet(key, player);
 		}
-		else
-		{
-			this.increaseEconomy(wallet, amount, false);
-		}
+		this.increaseEconomy(wallet, amount);
+		
 	}
 }
