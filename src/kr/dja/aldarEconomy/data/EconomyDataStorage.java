@@ -22,8 +22,6 @@ import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemWallet;
 import kr.dja.aldarEconomy.dataObject.player.PlayerEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.player.PlayerWallet;
-import kr.dja.aldarEconomy.dataObject.system.SystemEconomyStorage;
-import kr.dja.aldarEconomy.dataObject.system.SystemWallet;
 import kr.dja.aldarEconomy.setting.MoneyInfo;
 import kr.dja.aldarEconomy.trade.TradeTracker;
 
@@ -36,7 +34,6 @@ public class EconomyDataStorage
 	public final Map<UUID, PlayerEconomy> playerEconomyMap;
 	
 	public final ChestEconomyStorage chestDependEconomy;
-	public final SystemEconomyStorage systemDependEconomy;
 	public final PlayerEconomyStorage playerDependEconomy;
 	public final EnderChestEconomyStorage playerEnderChestEconomy;
 	public final ItemEconomyStorage itemEconomyStorage;
@@ -50,7 +47,6 @@ public class EconomyDataStorage
 		this.playerEconomyMap = Collections.unmodifiableMap(this._playerEconomyMap);
 		
 		this.chestDependEconomy = new ChestEconomyStorage(new ChestCallback());
-		this.systemDependEconomy = new SystemEconomyStorage(this::onModifySystemMoney);
 		this.playerDependEconomy = new PlayerEconomyStorage(this::onModifyPlayerMoney);
 		this.playerEnderChestEconomy = new EnderChestEconomyStorage(this::onModifyEnderChestMoney);
 		this.itemEconomyStorage = new ItemEconomyStorage(this::onModifyItemMoney);
@@ -93,11 +89,7 @@ public class EconomyDataStorage
 			Bukkit.getServer().broadcastMessage(String.format("deleteKey %s", loc));
 		}
 	}
-	
-	private void onModifySystemMoney(SystemWallet wallet, int amount)
-	{
-		
-	}
+
 	
 	private void onModifyPlayerMoney(PlayerWallet wallet, int amount)
 	{

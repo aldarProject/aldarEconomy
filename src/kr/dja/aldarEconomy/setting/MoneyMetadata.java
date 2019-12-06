@@ -11,12 +11,14 @@ public class MoneyMetadata implements ConfigurationSerializable, Comparable<Mone
 	public final String name;
 	public final ItemStack itemStack;
 	public final int value;
+	public final int maxStack;
 	
 	MoneyMetadata(String name, ItemStack itemStack, int value)
 	{
 		this.name = name;
 		this.itemStack = itemStack;
 		this.value = value;
+		this.maxStack = this.itemStack.getMaxStackSize();
 	}
 
 	@Override

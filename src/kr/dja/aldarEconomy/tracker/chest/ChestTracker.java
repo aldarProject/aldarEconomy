@@ -24,7 +24,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import kr.dja.aldarEconomy.ConstraintChecker;
+import kr.dja.aldarEconomy.EconomyUtil;
 import kr.dja.aldarEconomy.dataObject.DependType;
 import kr.dja.aldarEconomy.dataObject.IntLocation;
 import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
@@ -35,14 +35,14 @@ import kr.dja.aldarEconomy.setting.MoneyMetadata;
 
 public class ChestTracker
 {// 창고에 누가 얼마 넣었고 누가 얼마 뺐는지 추적
-	private final ConstraintChecker checker;
+	private final EconomyUtil checker;
 	private final ChestEconomyStorage chestDependEconomy;
 	private final PlayerEconomyStorage playerDependEconomy;
 	private final Logger logger;
 	
 	private final Map<Inventory, OpenedChestMoneyInfo> openedChestInv;
 	
-	public ChestTracker(ConstraintChecker checker, ChestEconomyStorage chestDependEconomy, PlayerEconomyStorage playerDependEconomy, Logger logger)
+	public ChestTracker(EconomyUtil checker, ChestEconomyStorage chestDependEconomy, PlayerEconomyStorage playerDependEconomy, Logger logger)
 	{
 		this.checker = checker;
 		this.chestDependEconomy = chestDependEconomy;
@@ -51,7 +51,12 @@ public class ChestTracker
 		this.openedChestInv = new HashMap<>();
 	}
 	
-	public void destroyBlock(Block b)
+	public boolean isOpenedEconomyChest(Inventory chest)
+	{
+		return this.getMoneyInfo(chest) != null;
+	}
+	
+	public void onDestroyBlock(Block b)
 	{
 		BlockState bs = b.getState();
 		if(!(bs instanceof Container)) return;
@@ -87,7 +92,7 @@ public class ChestTracker
 		}
 	}
 	
-	public void gainMoney(HumanEntity player, int amount)
+	public void onPlayerGainMoney(HumanEntity player, int amount)
 	{
 		Inventory openInv = player.getOpenInventory().getTopInventory();
 		if(openInv == null) return;
@@ -104,7 +109,7 @@ public class ChestTracker
 		info.playerMoneyMap.put(player, playerMoney + amount);
 	}
 	
-	public void dropMoney(HumanEntity player, int amount)
+	public void onPlayerDropMoney(HumanEntity player, int amount)
 	{
 		Inventory openInv = player.getOpenInventory().getTopInventory();
 		if(openInv == null) return;
@@ -120,7 +125,7 @@ public class ChestTracker
 		this.chestMoneyCounting(info);
 	}
 	
-	public void openChest(Inventory chest, HumanEntity player)
+	public void onOpenChest(Inventory chest, HumanEntity player)
 	{
 		OpenedChestMoneyInfo info = this.getMoneyInfo(chest);
 		if(info == null)
@@ -131,7 +136,7 @@ public class ChestTracker
 		info.playerMoneyMap.put(player, playerMoney);
 	}
 
-	public void closeChest(Inventory chest, HumanEntity player)
+	public void onCloseChest(Inventory chest, HumanEntity player)
 	{
 		OpenedChestMoneyInfo info = this.getMoneyInfo(chest);
 

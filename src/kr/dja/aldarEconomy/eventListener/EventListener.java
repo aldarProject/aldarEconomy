@@ -38,7 +38,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 
-import kr.dja.aldarEconomy.ConstraintChecker;
+import kr.dja.aldarEconomy.EconomyUtil;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
 import kr.dja.aldarEconomy.tracker.item.ItemTracker;
@@ -47,7 +47,7 @@ import kr.dja.aldarEconomy.tracker.item.ItemTracker;
 
 public class EventListener implements Listener
 {
-	private final ConstraintChecker checker;
+	private final EconomyUtil checker;
 	private final ChestTracker chestTracker;
 	private final ItemTracker itemTracker;
 	private final Logger logger;
@@ -55,7 +55,7 @@ public class EventListener implements Listener
 	private final Set<HumanEntity> closeChestItemDropCheck;
 	private final Set<Item> destroyCheck;
 
-	public EventListener(ConstraintChecker checker, ChestTracker chestTracker, ItemTracker itemTracker, Logger logger)
+	public EventListener(EconomyUtil checker, ChestTracker chestTracker, ItemTracker itemTracker, Logger logger)
 	{
 		this.checker = checker;
 		this.chestTracker = chestTracker;
@@ -73,7 +73,7 @@ public class EventListener implements Listener
 		if(top == null) return;
 		if(!(top.getType() == InventoryType.CHEST || top.getType() == InventoryType.ENDER_CHEST)) return;
 		long before = System.nanoTime();
-		this.chestTracker.openChest(top, e.getPlayer());
+		this.chestTracker.onOpenChest(top, e.getPlayer());
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 	
@@ -90,7 +90,7 @@ public class EventListener implements Listener
 		{
 			this.closeChestItemDropCheck.add(player);
 		}
-		this.chestTracker.closeChest(top, player);
+		this.chestTracker.onCloseChest(top, player);
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 	
@@ -100,7 +100,7 @@ public class EventListener implements Listener
 		if(e.isCancelled()) return;
 		for(Block b : e.blockList())
 		{
-			this.chestTracker.destroyBlock(b);
+			this.chestTracker.onDestroyBlock(b);
 		}
 	}
 	
@@ -110,7 +110,7 @@ public class EventListener implements Listener
 		if(e.isCancelled()) return;
 		long before = System.nanoTime();
 		Block b = e.getBlock();
-		this.chestTracker.destroyBlock(b);
+		this.chestTracker.onDestroyBlock(b);
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 
@@ -127,7 +127,7 @@ public class EventListener implements Listener
 			this.destroyCheck.remove(item);
 			return;
 		}
-		this.itemTracker.moneyDespawn(item, money.value * stack.getAmount());
+		this.itemTracker.onMoneyDespawn(item, money.value * stack.getAmount());
 		//Bukkit.getServer().broadcastMessage("돈소멸" + money.toString());
 		
 	}
@@ -148,9 +148,9 @@ public class EventListener implements Listener
 		if(entity instanceof HumanEntity)
 		{
 			HumanEntity p = (HumanEntity)e.getEntity();
-			this.chestTracker.gainMoney((HumanEntity)e.getEntity(), money.value * stack.getAmount());
+			this.chestTracker.onPlayerGainMoney((HumanEntity)e.getEntity(), money.value * stack.getAmount());
 			this.destroyCheck.add(e.getItem());
-			this.itemTracker.playerGainMoney(p, e.getItem(), money.value * stack.getAmount());
+			this.itemTracker.onPlayerGainMoney(p, e.getItem(), money.value * stack.getAmount());
 		}
 	}
 	
@@ -164,13 +164,13 @@ public class EventListener implements Listener
 		Player p = e.getPlayer();
 		if(!this.closeChestItemDropCheck.contains(p))
 		{
-			this.chestTracker.dropMoney(p, money.value * stack.getAmount());
+			this.chestTracker.onPlayerDropMoney(p, money.value * stack.getAmount());
 		}
 		else
 		{
 			this.closeChestItemDropCheck.remove(p);
 		}
-		this.itemTracker.playerDropMoney(p, e.getItemDrop(), money.value * stack.getAmount());
+		this.itemTracker.onPlayerDropMoney(p, e.getItemDrop(), money.value * stack.getAmount());
     }
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -230,7 +230,7 @@ public class EventListener implements Listener
 		MoneyMetadata money = this.checker.isMoney(e.getEntity().getItemStack());
 		if(money == null) return;
 		this.destroyCheck.add(e.getEntity());
-		this.itemTracker.moneyMerge(e.getTarget(), e.getEntity());
+		this.itemTracker.onMoneyMerge(e.getTarget(), e.getEntity());
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)

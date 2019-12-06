@@ -19,7 +19,7 @@ public class AldarEconomy extends JavaPlugin
 	private String version;
 	private PluginManager pluginManager;
 	private ConfigLoader configLoader;
-	private ConstraintChecker constraintChecker;
+	private EconomyUtil constraintChecker;
 	private EconomyDataStorage storage;
 	private EventListener eventListener;
 	private ChestTracker chestTracker;
@@ -32,7 +32,7 @@ public class AldarEconomy extends JavaPlugin
 	{
 		this.configLoader = new ConfigLoader(this);
 		
-		this.constraintChecker = new ConstraintChecker(this.configLoader.getMoneyInfo());
+		this.constraintChecker = new EconomyUtil(this.configLoader.getMoneyInfo());
 		this.version = this.getDescription().getVersion();
 		this.storage = new EconomyDataStorage(this.configLoader.getMoneyInfo(), null, this.getLogger());
 		this.chestTracker = new ChestTracker(this.constraintChecker, this.storage.chestDependEconomy, this.storage.playerDependEconomy, this.getLogger());

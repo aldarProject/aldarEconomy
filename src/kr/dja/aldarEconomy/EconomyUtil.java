@@ -9,11 +9,11 @@ import org.bukkit.inventory.ItemStack;
 import kr.dja.aldarEconomy.setting.MoneyInfo;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 
-public class ConstraintChecker
+public class EconomyUtil
 {
 	private final MoneyInfo moneyInfo;
 	
-	public ConstraintChecker(MoneyInfo moneyInfo)
+	public EconomyUtil(MoneyInfo moneyInfo)
 	{
 		this.moneyInfo = moneyInfo;
 	}
@@ -29,6 +29,13 @@ public class ConstraintChecker
 			}
 		}
 		return null;
+	}
+	
+	public int getValue(ItemStack stack)
+	{
+		MoneyMetadata meta = this.isMoney(stack);
+		if(meta == null) return 0;
+		return meta.value * stack.getAmount();
 	}
 	
 	public boolean isAllowdInventory(Inventory inv)

@@ -27,7 +27,7 @@ public class ItemTracker
 		this.logger = logger;
 	}
 	
-	public void playerGainMoney(HumanEntity player, Item item, int amount)
+	public void onPlayerGainMoney(HumanEntity player, Item item, int amount)
 	{
 		Bukkit.getServer().broadcastMessage("gainItem");
 		UUID itemUID = item.getUniqueId();
@@ -52,14 +52,14 @@ public class ItemTracker
 		this.playerStorage.increaseEconomy(player.getUniqueId(), amount);
 	}
 	
-	public void playerDropMoney(HumanEntity player, Item item, int amount)
+	public void onPlayerDropMoney(HumanEntity player, Item item, int amount)
 	{
 		Bukkit.getServer().broadcastMessage("dropItem");
 		this.itemStorage.increaseEconomy(item.getUniqueId(), player.getUniqueId(), DependType.PLAYER, amount);
 	}
 	
 	
-	public void moneyMerge(Item target, Item source)
+	public void onMoneyMerge(Item target, Item source)
 	{
 		UUID targetUID = target.getUniqueId();
 		UUID sourceUID = source.getUniqueId();
@@ -79,7 +79,7 @@ public class ItemTracker
 		}
 	}
 
-	public void moneyDespawn(Item item, int amount)
+	public void onMoneyDespawn(Item item, int amount)
 	{
 		int diff = amount;
 		UUID itemUID = item.getUniqueId();
