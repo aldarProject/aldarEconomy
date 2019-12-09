@@ -2,7 +2,9 @@ package kr.dja.aldarEconomy.dataObject.chest;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import kr.dja.aldarEconomy.dataObject.DependType;
@@ -13,12 +15,16 @@ public class ChestEconomyStorage
 	private final IChestObserver callback;
 	private final Map<IntLocation, ChestEconomyChild> _eMap;
 	public final Map<IntLocation, ChestEconomyChild> eMap;
+	private final Set<ChestEconomyChild> _childSet;
+	public final Set<ChestEconomyChild> childSet;
 
 	public ChestEconomyStorage(IChestObserver callback)
 	{
 		this.callback = callback;
 		this._eMap = new HashMap<>();
 		this.eMap = Collections.unmodifiableMap(this._eMap);
+		this._childSet = new HashSet<>();
+		this.childSet = Collections.unmodifiableSet(this._childSet);
 	}
 
 	public ChestEconomyChild increaseEconomy(IntLocation key1, UUID key2, int amount, DependType type)
@@ -28,6 +34,7 @@ public class ChestEconomyStorage
 		{
 			map = new ChestEconomyChild(this.callback);
 			map.parents.add(key1);
+			this._childSet.add(map);
 			this._eMap.put(key1, map);
 			this.callback.appendKey(key1, map);
 		}
@@ -46,6 +53,7 @@ public class ChestEconomyStorage
 				this._eMap.remove(key);
 				this.callback.deleteKey(key, map);
 			}
+			this._childSet.remove(map);
 		}
 		map.parents.clear();
 	}

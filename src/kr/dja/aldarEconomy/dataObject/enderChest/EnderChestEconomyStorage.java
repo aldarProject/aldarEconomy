@@ -6,19 +6,19 @@ import kr.dja.aldarEconomy.dataObject.EconomyMap;
 import kr.dja.aldarEconomy.dataObject.IEconomyObserver;
 import kr.dja.aldarEconomy.dataObject.IntLocation;
 
-public class EnderChestEconomyStorage extends EconomyMap<IntLocation, EnderChestWallet>
+public class EnderChestEconomyStorage extends EconomyMap<UUID, EnderChestWallet>
 {
 
-	public EnderChestEconomyStorage(IEconomyObserver<IntLocation, EnderChestWallet> callback) {
+	public EnderChestEconomyStorage(IEconomyObserver<UUID, EnderChestWallet> callback) {
 		super(callback);
 	}
 
-	public void increaseEconomy(IntLocation key, UUID player, int amount)
+	public void increaseEconomy(UUID key, int amount)
 	{
 		EnderChestWallet wallet = this.eMap.get(key);
 		if(wallet == null)
 		{
-			wallet = new EnderChestWallet(key, player);
+			wallet = new EnderChestWallet(key);
 		}
 		this.increaseEconomy(wallet, amount);
 		

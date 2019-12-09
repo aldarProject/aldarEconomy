@@ -7,14 +7,14 @@ import kr.dja.aldarEconomy.dataObject.Wallet;
 
 public class ItemWallet extends Wallet<UUID>
 {
-	public final UUID parent;
-	public final DependType dependType;
+	public final UUID itemUID;
+	public final DependType ownerType;
 	
-	ItemWallet(UUID parent, UUID id, DependType dependType)
+	ItemWallet(UUID itemUID, UUID ownerUID, DependType ownerType)
 	{
-		super(id);
-		this.parent = parent;
-		this.dependType = dependType;
+		super(ownerUID);
+		this.itemUID = itemUID;
+		this.ownerType = ownerType;
 		
 	}
 	

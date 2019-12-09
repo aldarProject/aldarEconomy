@@ -16,12 +16,12 @@ public class ItemEconomyChild extends EconomyMap<UUID, ItemWallet>
 		this.parent = parent;
 	}
 
-	public void increaseEconomy(UUID key, DependType type, int amount)
+	public void increaseEconomy(UUID owner, DependType ownerType, int amount)
 	{
-		ItemWallet wallet = this.eMap.get(key);
+		ItemWallet wallet = this.eMap.get(owner);
 		if(wallet == null)
 		{
-			wallet = new ItemWallet(this.parent, key, type);
+			wallet = new ItemWallet(this.parent, owner, ownerType);
 		}
 		this.increaseEconomy(wallet, amount);
 	} 

@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_12_R1.block.CraftHopper;
@@ -18,9 +19,11 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemMergeEvent;
+import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -39,6 +42,7 @@ import org.bukkit.inventory.ItemStack;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 
 import kr.dja.aldarEconomy.EconomyUtil;
+import kr.dja.aldarEconomy.setting.MoneyInfo;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
 import kr.dja.aldarEconomy.tracker.item.ItemTracker;
@@ -51,9 +55,9 @@ public class EventListener implements Listener
 	private final ChestTracker chestTracker;
 	private final ItemTracker itemTracker;
 	private final Logger logger;
-	
-	private final Set<HumanEntity> closeChestItemDropCheck;
+
 	private final Set<Item> destroyCheck;
+	private final Set<Item> createCheck;
 
 	public EventListener(EconomyUtil checker, ChestTracker chestTracker, ItemTracker itemTracker, Logger logger)
 	{
@@ -61,8 +65,8 @@ public class EventListener implements Listener
 		this.chestTracker = chestTracker;
 		this.itemTracker = itemTracker;
 		this.logger = logger;
-		this.closeChestItemDropCheck = new HashSet<>();
 		this.destroyCheck = new HashSet<>();
+		this.createCheck = new HashSet<>();
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -86,10 +90,6 @@ public class EventListener implements Listener
 		
 		long before = System.nanoTime();
 		HumanEntity player = e.getPlayer();
-		if(this.checker.isMoney(player.getItemOnCursor()) != null)
-		{
-			this.closeChestItemDropCheck.add(player);
-		}
 		this.chestTracker.onCloseChest(top, player);
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
@@ -104,13 +104,34 @@ public class EventListener implements Listener
 		}
 	}
 	
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onItemSpawn(ItemSpawnEvent e)
+	{
+		if(e.isCancelled()) return;
+		Item item = e.getEntity();
+		MoneyMetadata money = this.checker.isMoney(item.getItemStack());
+		if(money == null) return;
+		if(this.createCheck.contains(item))
+		{
+			this.createCheck.remove(item);
+			return;
+		}
+		this.chestTracker.onChestBreakMoneySpawn(item, money);
+		
+	}
+
+	
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onBlockBreak(BlockBreakEvent e)
 	{
 		if(e.isCancelled()) return;
 		long before = System.nanoTime();
 		Block b = e.getBlock();
+
 		this.chestTracker.onDestroyBlock(b);
+		this.itemTracker.onDestroyBlock(b);
+		Location l = b.getLocation();
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 
@@ -158,19 +179,15 @@ public class EventListener implements Listener
     public void onPlayerDropItem(PlayerDropItemEvent e)
 	{// 플레이어가 아이템을 버렸을 때
 		if(e.isCancelled()) return;
-		ItemStack stack = e.getItemDrop().getItemStack();
+		Item itemDrop = e.getItemDrop();
+		ItemStack stack = itemDrop.getItemStack();
 		MoneyMetadata money = this.checker.isMoney(stack);
 		if(money == null) return;
+		this.createCheck.add(itemDrop);
 		Player p = e.getPlayer();
-		if(!this.closeChestItemDropCheck.contains(p))
-		{
-			this.chestTracker.onPlayerDropMoney(p, money.value * stack.getAmount());
-		}
-		else
-		{
-			this.closeChestItemDropCheck.remove(p);
-		}
-		this.itemTracker.onPlayerDropMoney(p, e.getItemDrop(), money.value * stack.getAmount());
+		int amount = money.value * stack.getAmount();
+		this.chestTracker.onPlayerDropMoney(p, amount);
+		this.itemTracker.onPlayerDropMoney(p, itemDrop, amount);
     }
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -293,5 +310,10 @@ public class EventListener implements Listener
 		}
 	}
 	
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onEntityDeath(EntityDeathEvent e)
+	{
+		Bukkit.getServer().broadcastMessage("DEATH");
+	}
 	
 }

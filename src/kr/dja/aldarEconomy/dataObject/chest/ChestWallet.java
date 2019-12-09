@@ -7,12 +7,12 @@ import kr.dja.aldarEconomy.dataObject.Wallet;
 
 public class ChestWallet extends Wallet<UUID>
 {
-	public final DependType dependType;
+	public final DependType ownerType;
 	
-	ChestWallet(UUID id, DependType dependType)
+	ChestWallet(UUID owner, DependType ownerType)
 	{
-		super(id);
-		this.dependType = dependType;
+		super(owner);
+		this.ownerType = ownerType;
 		
 	}
 	

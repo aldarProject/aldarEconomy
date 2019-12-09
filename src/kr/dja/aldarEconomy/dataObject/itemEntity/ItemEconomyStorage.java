@@ -21,25 +21,25 @@ public class ItemEconomyStorage
 		this.eMap = Collections.unmodifiableMap(this._eMap);
 	}
 
-	public ItemEconomyChild increaseEconomy(UUID item, UUID key, DependType type, int amount)
+	public ItemEconomyChild increaseEconomy(UUID itemUID, UUID owner, DependType ownerType, int amount)
 	{
-		ItemEconomyChild map = this._eMap.get(item);
+		ItemEconomyChild map = this._eMap.get(itemUID);
 		if(map == null)
 		{
-			map = new ItemEconomyChild(this.callback, item);
-			this._eMap.put(item, map);
+			map = new ItemEconomyChild(this.callback, itemUID);
+			this._eMap.put(itemUID, map);
 		}
-		map.increaseEconomy(key, type, amount);
+		map.increaseEconomy(owner, ownerType, amount);
 		return map;
 	}
 	
-	public void decreaseEconomy(UUID item, UUID key, int amount)
+	public void decreaseEconomy(UUID itemUID, UUID key, int amount)
 	{
-		ItemEconomyChild map = this._eMap.get(item);
+		ItemEconomyChild map = this._eMap.get(itemUID);
 		map.decreaseEconomy(key, amount);
 		if(map.getTotalMoney() == 0)
 		{
-			this._eMap.remove(item);
+			this._eMap.remove(itemUID);
 		}
 	}
 

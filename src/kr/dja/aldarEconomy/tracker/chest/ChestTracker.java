@@ -6,7 +6,9 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,10 +21,12 @@ import org.bukkit.block.Chest;
 import org.bukkit.block.Container;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Item;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 
 import kr.dja.aldarEconomy.EconomyUtil;
 import kr.dja.aldarEconomy.dataObject.DependType;
@@ -41,14 +45,21 @@ public class ChestTracker
 	private final Logger logger;
 	
 	private final Map<Inventory, OpenedChestMoneyInfo> openedChestInv;
+	private final Set<HumanEntity> closeChestItemDropCheck;
 	
-	public ChestTracker(EconomyUtil checker, ChestEconomyStorage chestDependEconomy, PlayerEconomyStorage playerDependEconomy, Logger logger)
+	private final ChestItemTracker chestItemTracker;
+	
+	
+	public ChestTracker(Plugin plugin, EconomyUtil util, ChestEconomyStorage chestDependEconomy, PlayerEconomyStorage playerDependEconomy, Logger logger)
 	{
-		this.checker = checker;
+		this.checker = util;
 		this.chestDependEconomy = chestDependEconomy;
 		this.playerDependEconomy = playerDependEconomy;
 		this.logger = logger;
 		this.openedChestInv = new HashMap<>();
+		this.closeChestItemDropCheck = new HashSet<>();
+		this.chestItemTracker = new ChestItemTracker(plugin, util);
+		
 	}
 	
 	public boolean isOpenedEconomyChest(Inventory chest)
@@ -90,6 +101,15 @@ public class ChestTracker
 			if(info != null) info.chestMoney -= discountAmount;
 			this.destoryChest(b, discountAmount);
 		}
+		if(discountAmount != 0)
+		{
+			this.chestItemTracker.onChestBreak(discountAmount);
+		}
+	}
+
+	public void onChestBreakMoneySpawn(Item item, MoneyMetadata money)
+	{
+		this.chestItemTracker.onChestBreakItemSpawn(item, money);
 	}
 	
 	public void onPlayerGainMoney(HumanEntity player, int amount)
@@ -106,11 +126,18 @@ public class ChestTracker
 			return;
 		}
 		
+		
 		info.playerMoneyMap.put(player, playerMoney + amount);
 	}
 	
 	public void onPlayerDropMoney(HumanEntity player, int amount)
 	{
+		if(this.closeChestItemDropCheck.contains(player))
+		{
+			this.closeChestItemDropCheck.remove(player);
+			return;
+		}
+		
 		Inventory openInv = player.getOpenInventory().getTopInventory();
 		if(openInv == null) return;
 		OpenedChestMoneyInfo info = this.getMoneyInfo(openInv);
@@ -138,6 +165,11 @@ public class ChestTracker
 
 	public void onCloseChest(Inventory chest, HumanEntity player)
 	{
+		if(this.checker.isMoney(player.getItemOnCursor()) != null)
+		{
+			this.closeChestItemDropCheck.add(player);
+		}
+		
 		OpenedChestMoneyInfo info = this.getMoneyInfo(chest);
 
 		if(info == null)
@@ -231,6 +263,7 @@ public class ChestTracker
 	{
 		IntLocation loc = new IntLocation(chest.getLocation());
 		ChestEconomyChild map = this.chestDependEconomy.increaseEconomy(loc, player.getUniqueId(), amount, DependType.PLAYER);
+		this.playerDependEconomy.decreaseEconomy(player.getUniqueId(), amount);
 		Bukkit.getServer().broadcastMessage(String.format("PlayerToChest %s %s +%d(%d)", player.getName(), loc, amount, map.getTotalMoney()));
 	}
 	
@@ -245,6 +278,7 @@ public class ChestTracker
 		{
 			this.chestDependEconomy.appendKey(rightLoc, increaseMap);
 		}
+		this.playerDependEconomy.decreaseEconomy(player.getUniqueId(), amount);
 		Bukkit.getServer().broadcastMessage(String.format("PlayerToChest %s %s %s +%d(%d)", player.getName(), leftLoc, rightLoc, amount, increaseMap.getTotalMoney()));
 	}
 	

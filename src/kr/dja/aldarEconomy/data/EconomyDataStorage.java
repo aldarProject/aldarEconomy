@@ -70,23 +70,23 @@ public class EconomyDataStorage
 		@Override
 		public void modifyMoney(UUID uuid, UUID player, ChestWallet wallet, int amount)
 		{
-			if(wallet.dependType == DependType.PLAYER)
+			if(wallet.ownerType == DependType.PLAYER)
 			{
 				EconomyDataStorage.this.modifyPlayerMoney(player, amount);
-				Bukkit.getServer().broadcastMessage(String.format("modifyEconomy %s %s", Bukkit.getPlayer(player).getName(), wallet.getMoney()));
+				//Bukkit.getServer().broadcastMessage(String.format("modifyEconomy %s %s", Bukkit.getPlayer(player).getName(), wallet.getMoney()));
 			}
 		}
 
 		@Override
 		public void appendKey(IntLocation loc, ChestEconomyChild obj)
 		{
-			Bukkit.getServer().broadcastMessage(String.format("appendKey %s", loc));
+			//Bukkit.getServer().broadcastMessage(String.format("appendKey %s", loc));
 		}
 
 		@Override
 		public void deleteKey(IntLocation loc, ChestEconomyChild obj)
 		{
-			Bukkit.getServer().broadcastMessage(String.format("deleteKey %s", loc));
+			//Bukkit.getServer().broadcastMessage(String.format("deleteKey %s", loc));
 		}
 	}
 
@@ -99,12 +99,12 @@ public class EconomyDataStorage
 	private void onModifyEnderChestMoney(EnderChestWallet wallet, int amount)
 	{
 		
-		this.modifyPlayerMoney(wallet.player, amount);
+		this.modifyPlayerMoney(wallet.depend, amount);
 	}
 	
 	private void onModifyItemMoney(ItemWallet wallet, int amount)
 	{
-		if(wallet.dependType == DependType.PLAYER)
+		if(wallet.ownerType == DependType.PLAYER)
 		{
 			this.modifyPlayerMoney(wallet.depend, amount);
 		}
