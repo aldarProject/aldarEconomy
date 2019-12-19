@@ -1,10 +1,10 @@
-package kr.dja.aldarEconomy.tracker.chest;
+package kr.dja.aldarEconomy.tracker.item;
 
 import org.bukkit.entity.Item;
 
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 
-class MoneyItemInfo
+public class MoneyItemInfo
 {
 	public final Item item;
 	public final int amount;

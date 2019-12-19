@@ -1,6 +1,8 @@
 package kr.dja.aldarEconomy;
 
 
+import java.util.logging.Logger;
+
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginManager;
@@ -18,10 +20,11 @@ public class AldarEconomy extends JavaPlugin
 {
 	public static final String SYSTEM_ID = "EconomyMaster";
 	
+	private Logger logger;
 	private String version;
 	private PluginManager pluginManager;
 	private ConfigLoader configLoader;
-	private EconomyUtil constraintChecker;
+	private EconomyUtil util;
 	private EconomyDataStorage storage;
 	private EventListener eventListener;
 	private ChestTracker chestTracker;
@@ -34,31 +37,32 @@ public class AldarEconomy extends JavaPlugin
 	@Override
 	public void onEnable()
 	{
+		this.logger = this.getLogger();
 		this.configLoader = new ConfigLoader(this);
-		
-		this.constraintChecker = new EconomyUtil(this.configLoader.getMoneyInfo());
 		this.version = this.getDescription().getVersion();
-		this.storage = new EconomyDataStorage(this.configLoader.getMoneyInfo(), null, this.getLogger());
-		this.chestTracker = new ChestTracker(this, this.constraintChecker, this.storage.chestDependEconomy, this.storage.playerDependEconomy, this.getLogger());
-		this.itemTracker = new ItemTracker(this.storage.itemEconomyStorage, this.storage.playerDependEconomy, this.getLogger());
-		this.eventListener = new EventListener(this.constraintChecker, this.chestTracker, this.itemTracker, this.getLogger());
-		this.bank = new Bank(this.configLoader.getMoneyInfo(), this.constraintChecker, this.storage, this.chestTracker);
+		
+		this.util = new EconomyUtil(this.configLoader.getMoneyInfo());
+		this.storage = new EconomyDataStorage(this.configLoader.getMoneyInfo(), null, this.logger);
+		this.itemTracker = new ItemTracker(this, this.util, this.storage.itemEconomyStorage, this.storage.playerDependEconomy, this.logger);
+		this.chestTracker = new ChestTracker(this.itemTracker, this.util, this.storage.chestDependEconomy, this.storage.playerDependEconomy, this.logger);
+		this.eventListener = new EventListener(this.util, this.chestTracker, this.itemTracker, this.logger);
+		this.bank = new Bank(this.configLoader.getMoneyInfo(), this.util, this.storage, this.chestTracker);
 		
 		this.pluginManager = this.getServer().getPluginManager();
 		
 
-		this.getLogger().info("\n"+this.configLoader.toString());
+		this.logger.info("\n"+this.configLoader.toString());
 		this.pluginManager.registerEvents(this.eventListener, this);
 		
 		this.commandManager = new CommandManager(this, this.storage);
 		
-		this.getLogger().info("Aldar Economy"+version+" enabled by camelCase");
+		this.logger.info("Aldar Economy"+version+" enabled by camelCase");
 	}
 	
 	@Override
 	public void onDisable()
 	{
-		this.getLogger().info("Aldar Economy"+version+" disabled by camelCase");
+		this.logger.info("Aldar Economy"+version+" disabled by camelCase");
 	}
 	
 	

@@ -1,5 +1,9 @@
 package kr.dja.aldarEconomy.tracker.item;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Stack;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -9,11 +13,18 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
+
+import kr.dja.aldarEconomy.EconomyUtil;
 import kr.dja.aldarEconomy.dataObject.DependType;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyChild;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemWallet;
 import kr.dja.aldarEconomy.dataObject.player.PlayerEconomyStorage;
+import kr.dja.aldarEconomy.setting.MoneyMetadata;
+import kr.dja.aldarEconomy.tracker.chest.DestroyChestResult;
+import kr.dja.aldarEconomy.tracker.chest.DestroyChestResultMember;
 
 public class ItemTracker
 {
@@ -21,25 +32,119 @@ public class ItemTracker
 	private final PlayerEconomyStorage playerStorage;
 	private final Logger logger;
 	
-	public ItemTracker(ItemEconomyStorage itemStorage, PlayerEconomyStorage playerStorage, Logger logger)
+	private final Plugin plugin;
+	private final EconomyUtil util;
+	
+	private Queue<MoneyItemSpawnCacheData> itemDropCheckMoneyQueue;
+	private Stack<MoneyItemInfo> itemDropCheckStack;
+	private int moneyRemain;
+	private MoneyItemSpawnCacheData moneyItemSpawnCacheData;
+	private final Runnable nextTickRunnable;
+	private boolean hasNextTask;
+	
+	public ItemTracker(Plugin plugin, EconomyUtil util, ItemEconomyStorage itemStorage, PlayerEconomyStorage playerStorage, Logger logger)
 	{
+		
 		this.itemStorage = itemStorage;
 		this.playerStorage = playerStorage;
 		this.logger = logger;
+		
+		this.plugin = plugin;
+		this.util = util;
+		this.itemDropCheckMoneyQueue = new LinkedList<>();
+		this.itemDropCheckStack = new Stack<>();
+		this.nextTickRunnable = this::nextTick;
+		this.hasNextTask = false;
 	}
 	
-	public void onDestroyBlock(Block b)
+	public void onPlayerDeathDropMoney(HumanEntity player, int dropMoney)
 	{
-		b.getDrops();
+		this.itemDropCheckMoneyQueue.add(new MoneyItemSpawnCacheData(MoneyItemSpawnCacheData.ENTITY_DEATH, player.getUniqueId(), dropMoney));
+		if(!this.hasNextTask)
+		{
+			Bukkit.getScheduler().runTask(this.plugin, this.nextTickRunnable);
+			this.hasNextTask = true;
+		}
+	}
+	
+	public void onChestBreak(DestroyChestResult result)
+	{
+		this.itemDropCheckMoneyQueue.add(new MoneyItemSpawnCacheData(MoneyItemSpawnCacheData.DESTORY_CHEST, result));
+		this.moneyRemain = 0;
+		if(!this.hasNextTask)
+		{
+			Bukkit.getScheduler().runTask(this.plugin, this.nextTickRunnable);
+			this.hasNextTask = true;
+		}
+	}
+	
+	private void nextTick()
+	{//오류가 누적되지 않도록 해줌.
+		Bukkit.getServer().broadcastMessage("nextTick");
+		this.hasNextTask = false;
+		this.itemDropCheckMoneyQueue.clear();
+		this.itemDropCheckStack.clear();
+		this.moneyItemSpawnCacheData = null;
+	}
+
+	public void onItemSpawn(Item item, MoneyMetadata moneyMeta)
+	{
+		ItemStack itemStack = item.getItemStack();
 		
-		// TODO Auto-generated method stub
+		
+		if(this.moneyRemain == 0)
+		{
+			if(this.itemDropCheckMoneyQueue.isEmpty())
+			{
+				return;
+			}
+			this.moneyItemSpawnCacheData = this.itemDropCheckMoneyQueue.poll();
+			this.moneyRemain = this.moneyItemSpawnCacheData.dropMoney;
+			Bukkit.getServer().broadcastMessage("dequeue: " + this.moneyRemain);
+		}
+		int amount = moneyMeta.value * itemStack.getAmount();
+		this.moneyRemain -= amount;
+		this.itemDropCheckStack.add(new MoneyItemInfo(item, amount, moneyMeta));
+		if(this.moneyRemain == 0)
+		{
+			this.onItemSpawnAssignData(this.itemDropCheckStack, this.moneyItemSpawnCacheData);
+			/*Bukkit.getServer().broadcastMessage("다찾음 queueSize:" + this.itemDropCheckMoneyQueue.size());
+			
+			for(MoneyItemInfo info : this.itemDropCheckStack)
+			{
+				
+				Bukkit.getServer().broadcastMessage(String.format("item:%s, type:%s, amount:%s", info.item.getUniqueId(), info.moneyMeta.name, info.amount));
+			}*/
+			this.itemDropCheckStack.clear();
+		}
+	}
+	
+	private void onItemSpawnAssignData(List<MoneyItemInfo> moneyItemInfo, MoneyItemSpawnCacheData data)
+	{
+		switch(this.moneyItemSpawnCacheData.type)
+		{
+		case MoneyItemSpawnCacheData.DESTORY_CHEST:
+			int leftMoney = data.chestResult.members.get(0).discountAmount;
+			int chestResultIndex = 0;
+			int moneyItemInfoIndex = 0;
+			while(moneyItemInfo.size() > moneyItemInfoIndex)
+			{
+				leftMoney = 
+				
+			}
+			break;
+		case MoneyItemSpawnCacheData.ENTITY_DEATH:
+			for(MoneyItemInfo info : moneyItemInfo)
+			{
+				this.itemStorage.increaseEconomy(info.item.getUniqueId(), data.entityDeathResultUID, DependType.PLAYER, info.amount);
+				Bukkit.getServer().broadcastMessage(String.format("fromPlayerDeath item:%s, type:%s, amount:%s", info.item.getUniqueId(), info.moneyMeta.name, info.amount));
+			}
+			break;
+		}
+		
 		
 	}
 	
-	public void onPlayerDeath()
-	{
-		
-	}
 	
 	public void onPlayerGainMoney(HumanEntity player, Item item, int amount)
 	{

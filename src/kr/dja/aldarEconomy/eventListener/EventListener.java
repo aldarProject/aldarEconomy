@@ -112,12 +112,14 @@ public class EventListener implements Listener
 		Item item = e.getEntity();
 		MoneyMetadata money = this.checker.isMoney(item.getItemStack());
 		if(money == null) return;
+		
 		if(this.createCheck.contains(item))
 		{
 			this.createCheck.remove(item);
 			return;
 		}
-		this.chestTracker.onChestBreakMoneySpawn(item, money);
+
+		this.itemTracker.onItemSpawn(item, money);
 		
 	}
 
@@ -130,8 +132,6 @@ public class EventListener implements Listener
 		Block b = e.getBlock();
 
 		this.chestTracker.onDestroyBlock(b);
-		this.itemTracker.onDestroyBlock(b);
-		Location l = b.getLocation();
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 
@@ -313,7 +313,19 @@ public class EventListener implements Listener
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onEntityDeath(EntityDeathEvent e)
 	{
-		Bukkit.getServer().broadcastMessage("DEATH");
+		int dropMoney = 0;
+		for(ItemStack stack : e.getDrops())
+		{
+			MoneyMetadata money = this.checker.isMoney(stack);
+			if(money == null) continue;
+			dropMoney += money.value * stack.getAmount();
+		}
+		Entity entity = e.getEntity();
+		if(entity instanceof HumanEntity)
+		{
+			if(dropMoney != 0) this.itemTracker.onPlayerDeathDropMoney((HumanEntity)entity, dropMoney);
+		}
+		
 	}
 	
 }
