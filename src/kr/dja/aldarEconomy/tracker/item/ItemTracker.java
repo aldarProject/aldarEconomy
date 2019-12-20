@@ -48,9 +48,10 @@ public class ItemTracker
 		this.itemStorage = itemStorage;
 		this.playerStorage = playerStorage;
 		this.logger = logger;
-		
 		this.plugin = plugin;
 		this.util = util;
+		
+		this.moneyRemain = 0;
 		this.itemDropCheckMoneyQueue = new LinkedList<>();
 		this.itemDropCheckStack = new Stack<>();
 		this.nextTickRunnable = this::nextTick;
@@ -70,7 +71,6 @@ public class ItemTracker
 	public void onChestBreak(DestroyChestResult result)
 	{
 		this.itemDropCheckMoneyQueue.add(new MoneyItemSpawnCacheData(MoneyItemSpawnCacheData.DESTORY_CHEST, result));
-		this.moneyRemain = 0;
 		if(!this.hasNextTask)
 		{
 			Bukkit.getScheduler().runTask(this.plugin, this.nextTickRunnable);
@@ -82,6 +82,7 @@ public class ItemTracker
 	{//오류가 누적되지 않도록 해줌.
 		Bukkit.getServer().broadcastMessage("nextTick");
 		this.hasNextTask = false;
+		this.moneyRemain = 0;
 		this.itemDropCheckMoneyQueue.clear();
 		this.itemDropCheckStack.clear();
 		this.moneyItemSpawnCacheData = null;
@@ -119,25 +120,56 @@ public class ItemTracker
 		}
 	}
 	
-	private void onItemSpawnAssignData(List<MoneyItemInfo> moneyItemInfo, MoneyItemSpawnCacheData data)
+	private void onItemSpawnAssignData(List<MoneyItemInfo> moneyItemInfoList, MoneyItemSpawnCacheData data)
 	{
 		switch(this.moneyItemSpawnCacheData.type)
 		{
 		case MoneyItemSpawnCacheData.DESTORY_CHEST:
-			int leftMoney = data.chestResult.members.get(0).discountAmount;
+			
 			int chestResultIndex = 0;
 			int moneyItemInfoIndex = 0;
-			while(moneyItemInfo.size() > moneyItemInfoIndex)
+			DestroyChestResultMember chestResultMember = null;
+			MoneyItemInfo moneyItemInfo = null;
+			int chestResultLeft = 0;
+			int moneyItemInfoLeft = 0;
+			int decreaseMoney;
+			while(moneyItemInfoList.size() > moneyItemInfoIndex)
 			{
-				leftMoney = 
+				if(chestResultLeft == 0)
+				{
+					chestResultMember = data.chestResult.members.get(chestResultIndex);
+					chestResultLeft = chestResultMember.discountAmount;
+					++chestResultIndex;
+				}
+				if(moneyItemInfoLeft == 0)
+				{
+					moneyItemInfo = moneyItemInfoList.get(moneyItemInfoIndex);
+					moneyItemInfoLeft = moneyItemInfo.amount;
+					++moneyItemInfoIndex;
+				}
 				
+				if(chestResultLeft - moneyItemInfoLeft >= 0)
+				{
+					chestResultLeft -= moneyItemInfoLeft;
+					decreaseMoney = moneyItemInfoLeft;
+					moneyItemInfoLeft = 0;
+				}
+				else
+				{
+					moneyItemInfoLeft -= chestResultLeft;
+					decreaseMoney = chestResultLeft;
+					chestResultLeft = 0;
+				}
+				
+				this.itemStorage.increaseEconomy(moneyItemInfo.item.getUniqueId(), chestResultMember.player, DependType.PLAYER, decreaseMoney);
+				Bukkit.getServer().broadcastMessage(String.format("fromChestBreak playerName:%s item:%s, type:%s, amount:%s",Bukkit.getPlayer(chestResultMember.player).getName(), moneyItemInfo.item.getUniqueId(), moneyItemInfo.moneyMeta.name, decreaseMoney));
 			}
 			break;
 		case MoneyItemSpawnCacheData.ENTITY_DEATH:
-			for(MoneyItemInfo info : moneyItemInfo)
+			for(MoneyItemInfo info : moneyItemInfoList)
 			{
 				this.itemStorage.increaseEconomy(info.item.getUniqueId(), data.entityDeathResultUID, DependType.PLAYER, info.amount);
-				Bukkit.getServer().broadcastMessage(String.format("fromPlayerDeath item:%s, type:%s, amount:%s", info.item.getUniqueId(), info.moneyMeta.name, info.amount));
+				Bukkit.getServer().broadcastMessage(String.format("fromPlayerDeath playerName:%s item:%s, type:%s, amount:%s",Bukkit.getPlayer(data.entityDeathResultUID).getName(), info.item.getUniqueId(), info.moneyMeta.name, info.amount));
 			}
 			break;
 		}

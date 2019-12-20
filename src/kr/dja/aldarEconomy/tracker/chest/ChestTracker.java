@@ -311,6 +311,7 @@ public class ChestTracker
 				map.decreaseEconomy(user, leftMoney);
 				resultMembers.add(new DestroyChestResultMember(user, leftMoney));
 				Bukkit.getServer().broadcastMessage(String.format("ChestToField %s (%d)",Bukkit.getPlayer(user).getName(), leftMoney));
+				leftMoney = 0;
 				break;
 			}
 			else
@@ -324,8 +325,7 @@ public class ChestTracker
 		
 		if(leftMoney > 0)
 		{
-			logger.log(Level.WARNING, String.format("EconomyDataStorage.breakChest(): %s 존재하는 돈보다 많이 꺼냄2(%d)", chestLoc, amount - map.getTotalMoney()));
-			
+			logger.log(Level.WARNING, String.format("EconomyDataStorage.breakChest(): %s 존재하는 돈보다 많이 꺼냄2(%d)", chestLoc, leftMoney));
 		}
 		DestroyChestResult r = new DestroyChestResult(amount - leftMoney, resultMembers);
 		this.chestDependEconomy.delKey(chestLoc);
