@@ -31,7 +31,7 @@ public class ChestEconomyChild
 		this.parents = new HashSet<>();
 	}
 
-	public void increaseEconomy(UUID key, int amount, DependType type)
+	void increaseEconomy(UUID key, int amount, DependType type)
 	{
 		this.totalMoney += amount;
 		ChestWallet wallet = this._eMap.get(key);
@@ -49,16 +49,23 @@ public class ChestEconomyChild
 		this.callback.modifyMoney(this.uuid, key, wallet, amount);
 	}
 	
-	public void decreaseEconomy(UUID key, int amount)
+	void decreaseEconomy(UUID key, int amount)
 	{
 		ChestWallet wallet = this._eMap.get(key);
+		int beforeMoney = wallet.getMoney();
 		wallet.setMoney(wallet.getMoney() - amount);
-		this.totalMoney -= amount;
-		if(wallet.getMoney() == 0)
+		
+		if(wallet.getMoney() <= 0)
 		{
 			this._eMap.remove(key);
+			this.callback.modifyMoney(this.uuid, key, wallet, -beforeMoney);
+			this.totalMoney -= beforeMoney;
 		}
-		this.callback.modifyMoney(this.uuid, key, wallet, -amount);
+		else
+		{
+			this.callback.modifyMoney(this.uuid, key, wallet, -amount);
+			this.totalMoney -= amount;
+		}
 	}
 	
 	public int getMoney(UUID key)
@@ -66,6 +73,20 @@ public class ChestEconomyChild
 		ChestWallet wallet = this._eMap.get(key);
 		if(wallet == null) return 0;
 		return wallet.getMoney();
+	}
+	
+	@Override
+	public String toString()
+	{
+		StringBuffer buf = new StringBuffer();
+		buf.append("key: ");
+		for(IntLocation loc : this.parents)
+		{
+			buf.append(loc.toString() + ",");
+		}
+		buf.append(" totalMoney:"+this.totalMoney);
+		buf.append(" UUID:"+this.uuid);
+		return buf.toString();
 	}
 
 	public int getTotalMoney()

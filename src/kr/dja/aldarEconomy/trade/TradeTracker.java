@@ -1,40 +1,23 @@
 package kr.dja.aldarEconomy.trade;
 
-import java.util.List;
+import java.util.UUID;
 
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
+import kr.dja.aldarEconomy.dataObject.DependType;
+
 
 public class TradeTracker
 {
-	public void tradeLog(Player my, Player target, int amount, String description)
-	{
-		this.tradeLog(my, target, amount, null, null, description);
-	}
+	public static final String ARGSTYPE_SYSTEM_FORCE_ISSUANCE = "ARGSTYPE_SYSTEM_FORCE_ISSUANCE";
+	public static final String ARGSTYPE_SENDMONEY_CHEST_TRADE = "ARGSTYPE_SENDMONEY_CHEST_TRADE";
+	public static final String ARGSTYPE_SENDMONEY_ITEM_TRADE = "ARGSTYPE_SENDMONEY_ITEM_TRADE";
 	
-	public void tradeLog(Player my, Player target, int amount, List<ItemStack> myItem, List<ItemStack> targetItem, String description)
+	public void tradeLog(UUID my, DependType myType, UUID target, DependType targetType, int amount, String argsType, String args)
 	{
 		
 	}
 	
-	public void tradeLog(Player my, String systemID, int amount, String description)
-	{
-		this.tradeLog(my, systemID, amount, null, null, description);
-	}
-	
-	public void tradeLog(Player my, String systemID, int amount, List<ItemStack> myItem, List<ItemStack> targetItem, String description)
+	public void internalSystemLog(UUID target, DependType targetType, int amount, String argsType, String args)
 	{
 		
 	}
-	
-	public void tradeLog(String systemID, Player target, int amount, String description)
-	{
-		this.tradeLog(systemID, target, amount, null, null, description);
-	}
-	
-	public void tradeLog(String systemID, Player target, int amount, List<ItemStack> myItem, List<ItemStack> targetItem, String description)
-	{
-		
-	}
-
 }

@@ -8,6 +8,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
 import org.bukkit.craftbukkit.v1_12_R1.block.CraftHopper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -100,7 +102,11 @@ public class EventListener implements Listener
 		if(e.isCancelled()) return;
 		for(Block b : e.blockList())
 		{
-			this.chestTracker.onDestroyBlock(b);
+			BlockState bs = b.getState();
+			if(!(bs instanceof Container)) continue;
+			Container c = (Container)bs;
+			if(!this.checker.isAllowdInventory(c.getInventory())) continue;
+			this.chestTracker.onDestroyBlock(c);
 		}
 	}
 	
@@ -130,8 +136,11 @@ public class EventListener implements Listener
 		if(e.isCancelled()) return;
 		long before = System.nanoTime();
 		Block b = e.getBlock();
-
-		this.chestTracker.onDestroyBlock(b);
+		BlockState bs = b.getState();
+		if(!(bs instanceof Container)) return;
+		Container c = (Container)bs;
+		if(!this.checker.isAllowdInventory(c.getInventory())) return;
+		this.chestTracker.onDestroyBlock(c);
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 

@@ -37,7 +37,7 @@ public class ItemEconomyStorage
 	{
 		ItemEconomyChild map = this._eMap.get(itemUID);
 		map.decreaseEconomy(key, amount);
-		if(map.getTotalMoney() == 0)
+		if(map.getTotalMoney() <= 0)
 		{
 			this._eMap.remove(itemUID);
 		}

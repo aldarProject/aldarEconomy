@@ -1,8 +1,7 @@
 package kr.dja.aldarEconomy;
 
 
-import java.util.List;
-
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -72,4 +71,30 @@ public class EconomyUtil
 		
 		return true;
 	}
+	
+	public int getInventoryMoney(Inventory inv)
+	{
+		int sum = 0;
+		for(ItemStack stack : inv.getContents())
+		{
+			MoneyMetadata moneyInfo = this.isMoney(stack);
+			if(moneyInfo == null) continue;
+			sum += moneyInfo.value * stack.getAmount();
+		}
+		return sum;
+	}
+	
+	
+	public int getPlayerInventoryMoney(HumanEntity p)
+	{
+		int sum = this.getInventoryMoney(p.getInventory());
+		ItemStack cursorStack = p.getItemOnCursor();
+		MoneyMetadata moneyMeta = this.isMoney(cursorStack);
+		if(moneyMeta != null)
+		{
+			sum += moneyMeta.value * cursorStack.getAmount();
+		}
+		return sum;
+	}
+	
 }

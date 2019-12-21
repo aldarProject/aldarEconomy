@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public class APITokenManager
 {
+	public static final SystemID SYSTEM_TOKEN = new SystemID(UUID.fromString("44f47040-23e3-11ea-aaef-0800200c9a66"));
 	private Map<UUID, SystemID> idTokenMap;
 	
 	public APITokenManager()

@@ -15,6 +15,7 @@ import kr.dja.aldarEconomy.setting.ConfigLoader;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
 import kr.dja.aldarEconomy.tracker.item.ItemTracker;
 import kr.dja.aldarEconomy.trade.Bank;
+import kr.dja.aldarEconomy.trade.TradeTracker;
 
 public class AldarEconomy extends JavaPlugin
 {
@@ -27,6 +28,7 @@ public class AldarEconomy extends JavaPlugin
 	private EconomyUtil util;
 	private EconomyDataStorage storage;
 	private EventListener eventListener;
+	private TradeTracker tradeTracker;
 	private ChestTracker chestTracker;
 	private ItemTracker itemTracker;
 	private Bank bank;
@@ -42,9 +44,11 @@ public class AldarEconomy extends JavaPlugin
 		this.version = this.getDescription().getVersion();
 		
 		this.util = new EconomyUtil(this.configLoader.getMoneyInfo());
-		this.storage = new EconomyDataStorage(this.configLoader.getMoneyInfo(), null, this.logger);
-		this.itemTracker = new ItemTracker(this, this.util, this.storage.itemEconomyStorage, this.storage.playerDependEconomy, this.logger);
-		this.chestTracker = new ChestTracker(this.itemTracker, this.util, this.storage.chestDependEconomy, this.storage.playerDependEconomy, this.logger);
+		
+		this.storage = new EconomyDataStorage(this.configLoader.getMoneyInfo(), this.logger);
+		this.tradeTracker = new TradeTracker();
+		this.itemTracker = new ItemTracker(this, this.util, this.storage.itemEconomyStorage, this.storage.playerDependEconomy, this.tradeTracker, this.logger);
+		this.chestTracker = new ChestTracker(this.itemTracker, this.util, this.storage.chestDependEconomy, this.storage.playerDependEconomy, this.tradeTracker, this.logger);
 		this.eventListener = new EventListener(this.util, this.chestTracker, this.itemTracker, this.logger);
 		this.bank = new Bank(this.configLoader.getMoneyInfo(), this.util, this.storage, this.chestTracker);
 		

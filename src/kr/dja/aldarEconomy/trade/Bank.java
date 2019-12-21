@@ -98,7 +98,7 @@ public class Bank
 			ItemUtil.transfer(item, inv, -1);
 		}
 		IntLocation intLoc = new IntLocation(chest.getLocation());
-		this.dataStorage.chestDependEconomy.increaseEconomy(intLoc, id.uuid, amount, DependType.SYSTEM);
+		//this.dataStorage.chestDependEconomy.createAndIncreaseEconomy(intLoc, id.uuid, amount, DependType.SYSTEM);
 		return true;
 	}
 	

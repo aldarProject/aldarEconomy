@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
+
 import kr.dja.aldarEconomy.dataObject.DependType;
 import kr.dja.aldarEconomy.dataObject.IntLocation;
 
@@ -26,27 +28,25 @@ public class ChestEconomyStorage
 		this._childSet = new HashSet<>();
 		this.childSet = Collections.unmodifiableSet(this._childSet);
 	}
-
-	public ChestEconomyChild increaseEconomy(IntLocation key1, UUID key2, int amount, DependType type)
+	
+	public ChestEconomyChild createEconomyChild(IntLocation key)
 	{
-		ChestEconomyChild map = this._eMap.get(key1);
-		if(map == null)
-		{
-			map = new ChestEconomyChild(this.callback);
-			map.parents.add(key1);
-			this._childSet.add(map);
-			this._eMap.put(key1, map);
-			this.callback.appendKey(key1, map);
-		}
-		map.increaseEconomy(key2, amount, type);
+		ChestEconomyChild map = new ChestEconomyChild(this.callback);
+		this._childSet.add(map);
+		this.appendKey(key, map);
 		return map;
 	}
 	
-	public void decreaseEconomy(IntLocation key1, UUID key2, int amount)
+	public ChestEconomyChild increaseEconomy(ChestEconomyChild map, UUID key2, int amount, DependType type)
 	{
-		ChestEconomyChild map = this._eMap.get(key1);
+		map.increaseEconomy(key2, amount, type);
+		return map;
+	}
+
+	public void decreaseEconomy(ChestEconomyChild map, UUID key2, int amount)
+	{
 		map.decreaseEconomy(key2, amount);
-		if(map.getTotalMoney() == 0)
+		if(map.getTotalMoney() <= 0)
 		{
 			for(IntLocation key : map.parents)
 			{
@@ -54,8 +54,9 @@ public class ChestEconomyStorage
 				this.callback.deleteKey(key, map);
 			}
 			this._childSet.remove(map);
+			map.parents.clear();
 		}
-		map.parents.clear();
+		
 	}
 	
 	public void appendKey(IntLocation key, ChestEconomyChild map)

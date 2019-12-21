@@ -33,13 +33,25 @@ public abstract class EconomyMap<Depend, WalletType extends Wallet<Depend>>
 	public int decreaseEconomy(Depend key, int amount)
 	{
 		WalletType wallet = this._eMap.get(key);
+		if(wallet == null)
+		{
+			return -amount;
+		}
+		int beforeMoney = wallet.money;
 		wallet.money -= amount;
-		this.totalMoney -= amount;
-		if(wallet.money == 0)
+		
+		if(wallet.money <= 0)
 		{
 			this._eMap.remove(key);
+			this.totalMoney -= beforeMoney;
+			this.callback.modifyMoney(wallet, -beforeMoney);
 		}
-		this.callback.modifyMoney(wallet, -amount);
+		else
+		{
+			this.totalMoney -= amount;
+			this.callback.modifyMoney(wallet, -amount);
+		}
+		
 		return wallet.money;
 	}
 	
