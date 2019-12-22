@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import kr.dja.aldarEconomy.dataObject.DependType;
 import kr.dja.aldarEconomy.dataObject.IEconomyObserver;
+import kr.dja.aldarEconomy.dataObject.IntLocation;
+import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
 
 public class ItemEconomyStorage
 {
@@ -41,6 +43,16 @@ public class ItemEconomyStorage
 		{
 			this._eMap.remove(itemUID);
 		}
+	}
+	
+	public int getMoney(UUID key1, UUID key2)
+	{
+		ItemEconomyChild map = this._eMap.get(key1);
+		if(map != null)
+		{
+			return map.getMoney(key2);
+		}
+		return 0;
 	}
 
 }

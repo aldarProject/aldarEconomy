@@ -1,5 +1,6 @@
 package kr.dja.aldarEconomy.tracker.item;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -20,6 +21,7 @@ import kr.dja.aldarEconomy.EconomyUtil;
 import kr.dja.aldarEconomy.api.APITokenManager;
 import kr.dja.aldarEconomy.dataObject.DependType;
 import kr.dja.aldarEconomy.dataObject.IntLocation;
+import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyChild;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemWallet;
@@ -103,7 +105,6 @@ public class ItemTracker
 	{
 		ItemStack itemStack = item.getItemStack();
 		
-		
 		if(this.moneyRemain == 0)
 		{
 			if(this.itemDropCheckMoneyQueue.isEmpty())
@@ -183,23 +184,47 @@ public class ItemTracker
 	{
 		UUID itemUID = item.getUniqueId();
 		UUID playerUID = player.getUniqueId();
-		ItemEconomyChild child = this.itemStorage.eMap.get(itemUID);
+		ItemEconomyChild map = this.itemStorage.eMap.get(itemUID);
 		IntLocation intLoc = new IntLocation(item.getLocation());
-		if(child == null)
+		if(map == null)
 		{
 			this.tradeTracker.forceIssuance(playerUID, amount, "PLAYER_GAIN_MONEY", intLoc);
-			child = this.itemStorage.increaseEconomy(itemUID, player.getUniqueId(), DependType.PLAYER, amount);
+			map = this.itemStorage.increaseEconomy(itemUID, player.getUniqueId(), DependType.PLAYER, amount);
 		}
-		ItemWallet[] walletArr = new ItemWallet[child.eMap.size()];
-		child.eMap.values().toArray(walletArr);
-		
-		for(ItemWallet wallet : walletArr)
-		{
-			if(!wallet.depend.equals(playerUID))
+		ItemWallet[] walletArr = new ItemWallet[map.eMap.size()];
+		map.eMap.values().toArray(walletArr);
+		int playerMoney = this.itemStorage.getMoney(itemUID, playerUID);
+		int otherMoney = amount - playerMoney;
+		if(otherMoney <= 0)
+		{// 자신이 넣은만큼만 꺼내갔을 경우
+			this.itemStorage.decreaseEconomy(itemUID, playerUID, amount);
+		}
+		else
+		{// 남이 넣은 돈까지 꺼내가는 경우
+			this.itemStorage.decreaseEconomy(itemUID, playerUID, playerMoney);
+			// 만약 플레이어가 넣은 돈보다 많이 꺼내갔을 경우 가장 적은 돈을 넣은 플레이어의 돈부터 가져가도록 함.
+			int leftMoney = otherMoney;
+			
+			List<ItemWallet> list = new LinkedList<>(map.eMap.values());
+			Collections.sort(list);
+			for(ItemWallet wallet : list)
 			{
-				this.tradeTracker.tradeLog(wallet.depend, wallet.ownerType, playerUID, DependType.PLAYER, wallet.getMoney(), "PLAYER_GAIN_MONEY", intLoc);
+				int money = wallet.getMoney();
+				if(wallet.depend.equals(playerUID)) continue;
+				if(leftMoney - money <= 0)
+				{
+					this.itemStorage.decreaseEconomy(itemUID, wallet.depend, leftMoney);
+					this.tradeTracker.tradeLog(playerUID, DependType.PLAYER, wallet.depend, wallet.ownerType, leftMoney, "ITEM_TRADE", intLoc);
+					leftMoney = 0;
+					break;
+				}
+				else
+				{
+					this.itemStorage.decreaseEconomy(itemUID, wallet.depend, money);
+					this.tradeTracker.tradeLog(playerUID, DependType.PLAYER, wallet.depend, wallet.ownerType, money, "ITEM_TRADE", intLoc);
+					leftMoney -= money;
+				}
 			}
-			this.itemStorage.decreaseEconomy(itemUID, wallet.depend, wallet.getMoney());
 		}
 		this.playerStorage.increaseEconomy(playerUID, amount);
 	}

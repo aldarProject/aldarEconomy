@@ -113,6 +113,7 @@ public class EventListener implements Listener
 	{
 		if(e.isCancelled()) return;
 		Item item = e.getEntity();
+		
 		MoneyMetadata money = this.checker.isMoney(item.getItemStack());
 		if(money == null) return;
 		
@@ -176,8 +177,8 @@ public class EventListener implements Listener
 		{
 			HumanEntity p = (HumanEntity)e.getEntity();
 			this.chestTracker.onPlayerGainMoney((HumanEntity)e.getEntity(), money.value * stack.getAmount());
-			this.destroyCheck.add(e.getItem());
 			this.itemTracker.onPlayerGainMoney(p, e.getItem(), money.value * stack.getAmount());
+			if(e.getRemaining() == 0) this.destroyCheck.add(e.getItem());
 		}
 	}
 	
