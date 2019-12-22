@@ -5,10 +5,12 @@ import java.util.UUID;
 public class SystemID
 {
 	public final UUID uuid;
+	public final String name;
 	
-	SystemID(UUID uuid)
+	SystemID(UUID uuid, String name)
 	{
 		this.uuid = uuid;
+		this.name = name;
 	}
 	
 	@Override

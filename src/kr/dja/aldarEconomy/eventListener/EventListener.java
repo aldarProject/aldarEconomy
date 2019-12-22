@@ -76,7 +76,7 @@ public class EventListener implements Listener
 		if(top == null) return;
 		if(!(top.getType() == InventoryType.CHEST || top.getType() == InventoryType.ENDER_CHEST)) return;
 		long before = System.nanoTime();
-		this.chestTracker.onOpenChest(top, e.getPlayer());
+		this.chestTracker.onOpenEconomyChest(top, e.getPlayer());
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 	
@@ -89,7 +89,7 @@ public class EventListener implements Listener
 		
 		long before = System.nanoTime();
 		HumanEntity player = e.getPlayer();
-		this.chestTracker.onCloseChest(top, player);
+		this.chestTracker.onCloseEconomyChest(top, player);
 		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 	

@@ -11,8 +11,13 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class ConfigLoader {
+public class ConfigLoader
+{
 	public static final String KEY_MONEYMETA = "moneyMetadata";
+	
+	public static final String KEY_DBADDR = "dbAddr";
+	public static final String KEY_DBID = "dbID";
+	public static final String KEY_DBPW = "dbPassword";
 	
 	private final JavaPlugin plugin;
 	private final FileConfiguration config;

@@ -61,9 +61,18 @@ public class ItemTracker
 		this.hasNextTask = false;
 	}
 	
-	public void onPlayerDeathDropMoney(HumanEntity player, int dropMoney)
+	public void onPlayerDeathDropMoney(HumanEntity player, int amount)
 	{
-		this.itemDropCheckMoneyQueue.add(new MoneyItemSpawnCacheData(MoneyItemSpawnCacheData.ENTITY_DEATH, player.getUniqueId(), dropMoney));
+		UUID playerUID = player.getUniqueId();
+		
+		int result = this.playerStorage.decreaseEconomy(playerUID, amount);
+		if(result < 0)
+		{
+			int playerMoney = this.util.getPlayerInventoryMoney(player);
+			int diff = playerMoney - (amount + result);
+			this.tradeTracker.forceIssuance(playerUID, diff, "PLAYER_DEATH", new IntLocation(player.getLocation()));
+		}
+		this.itemDropCheckMoneyQueue.add(new MoneyItemSpawnCacheData(MoneyItemSpawnCacheData.ENTITY_DEATH, playerUID, amount));
 		if(!this.hasNextTask)
 		{
 			Bukkit.getScheduler().runTask(this.plugin, this.nextTickRunnable);
@@ -83,7 +92,6 @@ public class ItemTracker
 	
 	private void nextTick()
 	{//오류가 누적되지 않도록 해줌.
-		Bukkit.getServer().broadcastMessage("nextTick");
 		this.hasNextTask = false;
 		this.moneyRemain = 0;
 		this.itemDropCheckMoneyQueue.clear();
@@ -104,7 +112,6 @@ public class ItemTracker
 			}
 			this.moneyItemSpawnCacheData = this.itemDropCheckMoneyQueue.poll();
 			this.moneyRemain = this.moneyItemSpawnCacheData.dropMoney;
-			Bukkit.getServer().broadcastMessage("dequeue: " + this.moneyRemain);
 		}
 		int amount = moneyMeta.value * itemStack.getAmount();
 		this.moneyRemain -= amount;
@@ -112,13 +119,6 @@ public class ItemTracker
 		if(this.moneyRemain == 0)
 		{
 			this.onItemSpawnAssignData(this.itemDropCheckStack, this.moneyItemSpawnCacheData);
-			/*Bukkit.getServer().broadcastMessage("다찾음 queueSize:" + this.itemDropCheckMoneyQueue.size());
-			
-			for(MoneyItemInfo info : this.itemDropCheckStack)
-			{
-				
-				Bukkit.getServer().broadcastMessage(String.format("item:%s, type:%s, amount:%s", info.item.getUniqueId(), info.moneyMeta.name, info.amount));
-			}*/
 			this.itemDropCheckStack.clear();
 		}
 	}
@@ -165,14 +165,12 @@ public class ItemTracker
 				}
 				
 				this.itemStorage.increaseEconomy(moneyItemInfo.item.getUniqueId(), chestResultMember.owner, chestResultMember.type, decreaseMoney);
-				Bukkit.getServer().broadcastMessage(String.format("fromChestBreak playerName:%s item:%s, type:%s, amount:%s",chestResultMember.owner, moneyItemInfo.item.getUniqueId(), moneyItemInfo.moneyMeta.name, decreaseMoney));
 			}
 			break;
 		case MoneyItemSpawnCacheData.ENTITY_DEATH:
 			for(MoneyItemInfo info : moneyItemInfoList)
 			{
 				this.itemStorage.increaseEconomy(info.item.getUniqueId(), data.entityDeathResultUID, DependType.PLAYER, info.amount);
-				Bukkit.getServer().broadcastMessage(String.format("fromPlayerDeath playerName:%s item:%s, type:%s, amount:%s",Bukkit.getPlayer(data.entityDeathResultUID).getName(), info.item.getUniqueId(), info.moneyMeta.name, info.amount));
 			}
 			break;
 		}
@@ -183,31 +181,23 @@ public class ItemTracker
 	
 	public void onPlayerGainMoney(HumanEntity player, Item item, int amount)
 	{
-		//Bukkit.getServer().broadcastMessage("gainItem " + item.getUniqueId());
 		UUID itemUID = item.getUniqueId();
 		UUID playerUID = player.getUniqueId();
 		ItemEconomyChild child = this.itemStorage.eMap.get(itemUID);
+		IntLocation intLoc = new IntLocation(item.getLocation());
 		if(child == null)
 		{
-			Location loc = item.getLocation();
-			logger.log(Level.WARNING, String.format("ItemTracker.playerGainMoney() 아이템 추적 실패 (%s), %s,%d,%d,%d)"
-					, player.getName(), loc.getWorld().getName(), (int)loc.getX(), (int)loc.getY(), (int)loc.getZ()));
-			
+			this.tradeTracker.forceIssuance(playerUID, amount, "PLAYER_GAIN_MONEY", intLoc);
 			child = this.itemStorage.increaseEconomy(itemUID, player.getUniqueId(), DependType.PLAYER, amount);
-		}
-		int diff = child.getTotalMoney() - amount;
-		if(diff != 0)
-		{
-			logger.log(Level.WARNING, String.format("ItemTracker.playerGainMoney() 돈 액수 차이 (%s) %d"
-					, player.getName(), diff));
 		}
 		ItemWallet[] walletArr = new ItemWallet[child.eMap.size()];
 		child.eMap.values().toArray(walletArr);
+		
 		for(ItemWallet wallet : walletArr)
 		{
 			if(!wallet.depend.equals(playerUID))
 			{
-				this.tradeTracker.tradeLog(wallet.depend, wallet.ownerType, playerUID, DependType.PLAYER, wallet.getMoney(), TradeTracker.ARGSTYPE_SENDMONEY_ITEM_TRADE, item.getLocation().toString());
+				this.tradeTracker.tradeLog(wallet.depend, wallet.ownerType, playerUID, DependType.PLAYER, wallet.getMoney(), "PLAYER_GAIN_MONEY", intLoc);
 			}
 			this.itemStorage.decreaseEconomy(itemUID, wallet.depend, wallet.getMoney());
 		}
@@ -216,9 +206,15 @@ public class ItemTracker
 	
 	public void onPlayerDropMoney(HumanEntity player, Item item, int amount)
 	{
-		//Bukkit.getServer().broadcastMessage("drop " + item.getUniqueId());
 		UUID playerUID = player.getUniqueId();
-		this.playerStorage.decreaseEconomy(playerUID, amount);
+		int result = this.playerStorage.decreaseEconomy(playerUID, amount);
+		if(result < 0)
+		{
+			int playerMoney = this.util.getPlayerInventoryMoney(player);
+			this.playerStorage.increaseEconomy(playerUID, playerMoney);
+			int diff = playerMoney - (amount + result) + amount;
+			this.tradeTracker.forceIssuance(playerUID, diff, "PLAYER_DROP_MONEY", new IntLocation(player.getLocation()));
+		}
 		this.itemStorage.increaseEconomy(item.getUniqueId(), playerUID, DependType.PLAYER, amount);
 	}
 	
@@ -227,7 +223,6 @@ public class ItemTracker
 	{
 		UUID targetUID = target.getUniqueId();
 		UUID sourceUID = source.getUniqueId();
-		//Bukkit.getServer().broadcastMessage("merge" + sourceUID + " " + targetUID);
 		ItemEconomyChild targetChild = this.itemStorage.eMap.get(sourceUID);
 		ItemEconomyChild sourceChild = this.itemStorage.eMap.get(sourceUID);
 		
@@ -260,26 +255,24 @@ public class ItemTracker
 		}
 		ItemWallet[] walletArr = new ItemWallet[child.eMap.size()];
 		child.eMap.values().toArray(walletArr);
+		IntLocation intLoc = new IntLocation(item.getLocation());
 		for(ItemWallet wallet : walletArr)
 		{
 			int money = wallet.getMoney();
 			
 			this.itemStorage.decreaseEconomy(itemUID, wallet.depend, money);
-			this.tradeTracker.tradeLog(wallet.depend, wallet.ownerType, APITokenManager.SYSTEM_TOKEN.uuid, DependType.SYSTEM, money, TradeTracker.ARGSTYPE_SENDMONEY_ITEM_TRADE, item.getLocation().toString());
+			this.tradeTracker.tradeLog(wallet.depend, wallet.ownerType, APITokenManager.SYSTEM_TOKEN.uuid, DependType.SYSTEM, money, "MONEY_DESPAWN", intLoc);
 		}
 	}
 	
 	private ItemEconomyChild trackingFail(Item item)
 	{
-		Location loc = item.getLocation();
-		logger.log(Level.WARNING, String.format("ItemTracker.moneyMerge() 아이템 추적 실패: %s)"
-				, new IntLocation(loc)));
+		IntLocation intLoc = new IntLocation(item.getLocation());
+
 		int amount = this.util.getValue(item.getItemStack());
 		ItemEconomyChild child = this.itemStorage.increaseEconomy(item.getUniqueId(), APITokenManager.SYSTEM_TOKEN.uuid, DependType.SYSTEM, amount);
-		this.tradeTracker.internalSystemLog(APITokenManager.SYSTEM_TOKEN.uuid, DependType.SYSTEM, amount, TradeTracker.ARGSTYPE_SYSTEM_FORCE_ISSUANCE, "ON_MONEY_MERGE,"+loc.toString());
+		this.tradeTracker.forceIssuance(null, amount, "ON_MONEY_MERGE", intLoc);
 		return child;
 	}
-
-	
 
 }

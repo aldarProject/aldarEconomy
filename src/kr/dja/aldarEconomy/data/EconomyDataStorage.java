@@ -28,8 +28,9 @@ import kr.dja.aldarEconomy.trade.TradeTracker;
 public class EconomyDataStorage
 {// dao
 	private final MoneyInfo moneyInfo;
-
 	private final Logger logger;
+	public final String dataGroupName;
+	
 	private final Map<UUID, PlayerEconomy> _playerEconomyMap;
 	public final Map<UUID, PlayerEconomy> playerEconomyMap;
 	
@@ -38,14 +39,14 @@ public class EconomyDataStorage
 	public final EnderChestEconomyStorage playerEnderChestEconomy;
 	public final ItemEconomyStorage itemEconomyStorage;
 	
-	public EconomyDataStorage(MoneyInfo moneyInfo, Logger logger)
+	public EconomyDataStorage(MoneyInfo moneyInfo, Logger logger, String dataGroupName)
 	{
 		this.moneyInfo = moneyInfo;
-
 		this.logger = logger;
+		this.dataGroupName = dataGroupName;
+		
 		this._playerEconomyMap = new HashMap<>();
 		this.playerEconomyMap = Collections.unmodifiableMap(this._playerEconomyMap);
-		
 		this.chestDependEconomy = new ChestEconomyStorage(new ChestCallback());
 		this.playerDependEconomy = new PlayerEconomyStorage(this::onModifyPlayerMoney);
 		this.playerEnderChestEconomy = new EnderChestEconomyStorage(this::onModifyEnderChestMoney);
@@ -123,6 +124,6 @@ public class EconomyDataStorage
 		{
 			this._playerEconomyMap.remove(player);
 		}
-		Bukkit.getServer().broadcastMessage(String.format("modifyEconomy %s %s", Bukkit.getPlayer(player).getName(), amount));
+		//Bukkit.getServer().broadcastMessage(String.format("modifyEconomy %s %s", Bukkit.getPlayer(player).getName(), amount));
 	}
 }
