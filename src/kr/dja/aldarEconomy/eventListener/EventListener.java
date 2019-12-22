@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -44,11 +43,9 @@ import org.bukkit.inventory.ItemStack;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 
 import kr.dja.aldarEconomy.EconomyUtil;
-import kr.dja.aldarEconomy.setting.MoneyInfo;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
 import kr.dja.aldarEconomy.tracker.item.ItemTracker;
-
 
 
 public class EventListener implements Listener

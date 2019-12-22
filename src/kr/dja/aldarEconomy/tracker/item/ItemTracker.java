@@ -239,7 +239,6 @@ public class ItemTracker
 		{
 			sourceChild = this.trackingFail(source);
 		}
-		logger.log(Level.WARNING, "DEBUG!!!! " + sourceChild.eMap);
 		ItemWallet[] walletArr = new ItemWallet[sourceChild.eMap.size()];
 		sourceChild.eMap.values().toArray(walletArr);
 		for(ItemWallet wallet : walletArr)

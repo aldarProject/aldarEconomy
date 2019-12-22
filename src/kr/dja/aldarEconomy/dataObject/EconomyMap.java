@@ -31,7 +31,7 @@ public abstract class EconomyMap<Depend, WalletType extends Wallet<Depend>>
 	}
 	
 	public int decreaseEconomy(Depend key, int amount)
-	{
+	{// 돈을 빼고 지갑에 남은돈 반환해줌.
 		WalletType wallet = this._eMap.get(key);
 		if(wallet == null)
 		{
