@@ -18,26 +18,25 @@ import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyChild;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemWallet;
 
-public class EconomyLookupCommand implements CommandExecutor, TabCompleter
+public class EconomyLookupCmd implements CommandExecutor, TabCompleter
 {
 	public static final String PLAYER_MONEY_CMD = "money";
 	public static final String PLAYER_MONEYDETAIL_CMD = "moneydetail";
 	private final EconomyDataStorage storage;
 	
-	public EconomyLookupCommand(EconomyDataStorage storage)
+	EconomyLookupCmd(EconomyDataStorage storage)
 	{
 		this.storage = storage;
 	}
 	
 	@Override
-	public boolean onCommand(CommandSender
-			sender, Command cmd, String label, String[] args)
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
 		switch(cmd.getName())
 		{
 		case PLAYER_MONEY_CMD:
 		{
-			HumanEntity player = CommandUtil.getPlayer(sender, args);
+			HumanEntity player = CommandUtil.getPlayer(sender, args, 1);
 			if(player == null) return false;
 			UUID id = player.getUniqueId();
 			long money = this.storage.getPlayerMoney(id);
@@ -46,7 +45,7 @@ public class EconomyLookupCommand implements CommandExecutor, TabCompleter
 		}
 		case PLAYER_MONEYDETAIL_CMD:
 		{
-			HumanEntity player = CommandUtil.getPlayer(sender, args);
+			HumanEntity player = CommandUtil.getPlayer(sender, args, 1);
 			if(player == null) return false;
 			UUID id = player.getUniqueId();
 			long money = this.storage.getPlayerMoney(id);

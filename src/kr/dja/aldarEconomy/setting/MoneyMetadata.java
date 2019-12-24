@@ -49,7 +49,7 @@ public class MoneyMetadata implements ConfigurationSerializable, Comparable<Mone
 		Map<String, Object> map = (Map<String, Object>) args.get("itemStack");
 		ItemStack itemStack = ItemStack.deserialize(map);
 		
-		int value = (Integer) args.get("value");;
+		int value = (Integer) args.get("value");
 		
 		return new MoneyMetadata(name, itemStack, value);
 		

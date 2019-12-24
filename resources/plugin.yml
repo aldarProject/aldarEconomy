@@ -10,3 +10,6 @@ commands:
     moneydetail:
         description: show player money detail
         usage: /moneydetail [player]
+    moneyconsume:
+        description: consume target player money
+        usage: /moneyconsume <amount> [player]

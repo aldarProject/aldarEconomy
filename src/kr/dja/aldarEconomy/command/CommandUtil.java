@@ -9,23 +9,19 @@ import org.bukkit.entity.HumanEntity;
 
 public class CommandUtil
 {
-	public static HumanEntity getPlayer(CommandSender sender, String[] args)
+	public static HumanEntity getPlayer(CommandSender sender, String[] args, int index)
 	{
-		HumanEntity player;
-		if(args.length == 0)
+		HumanEntity player = null;
+		if(args.length == index - 1)
 		{
 			if(sender instanceof HumanEntity)
 			{
 				player = (HumanEntity)sender;
 			}
-			else
-			{
-				return null;
-			}
 		}
-		else
+		else if(args.length > index - 1)
 		{
-			player = Bukkit.getPlayer(args[0]);
+			player = Bukkit.getPlayer(args[index - 1]);
 		}
 		return player;
 	}

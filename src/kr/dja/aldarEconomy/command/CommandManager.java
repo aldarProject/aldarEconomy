@@ -5,23 +5,32 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import kr.dja.aldarEconomy.data.EconomyDataStorage;
+import kr.dja.aldarEconomy.trade.Bank;
 
 public class CommandManager
 {
 	private final JavaPlugin plugin;
-	private final EconomyLookupCommand economyCmd;
+	private final EconomyLookupCmd lookupCmd;
+	private final EconomyBankCmd bankCmd;
 	
-	public CommandManager(JavaPlugin plugin, EconomyDataStorage storage)
+	public CommandManager(JavaPlugin plugin, EconomyDataStorage storage, Bank bank)
 	{
 		this.plugin = plugin;
-		this.economyCmd = new EconomyLookupCommand(storage);
+		this.lookupCmd = new EconomyLookupCmd(storage);
+		this.bankCmd = new EconomyBankCmd(bank);
+		
 		PluginCommand cmd;
-		cmd = this.plugin.getCommand(EconomyLookupCommand.PLAYER_MONEY_CMD);
-		cmd.setExecutor(this.economyCmd);
-		cmd.setTabCompleter(this.economyCmd);
-		cmd = this.plugin.getCommand(EconomyLookupCommand.PLAYER_MONEYDETAIL_CMD);
-		cmd.setExecutor(this.economyCmd);
-		cmd.setTabCompleter(this.economyCmd);
+		
+		cmd = this.plugin.getCommand(EconomyLookupCmd.PLAYER_MONEY_CMD);
+		cmd.setExecutor(this.lookupCmd);
+		cmd.setTabCompleter(this.lookupCmd);
+		cmd = this.plugin.getCommand(EconomyLookupCmd.PLAYER_MONEYDETAIL_CMD);
+		cmd.setExecutor(this.lookupCmd);
+		cmd.setTabCompleter(this.lookupCmd);
+		
+		cmd = this.plugin.getCommand(EconomyBankCmd.ADMIN_CONSUME_PLAYERMONEY_CMD);
+		cmd.setExecutor(this.bankCmd);
+		cmd.setTabCompleter(this.bankCmd);
 	}
 
 }

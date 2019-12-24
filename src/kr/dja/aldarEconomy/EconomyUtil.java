@@ -30,6 +30,18 @@ public class EconomyUtil
 		return null;
 	}
 	
+	public MoneyMetadata getMoneyMeta(ItemStack stack)
+	{
+		for(MoneyMetadata meta : this.moneyInfo.moneyList)
+		{
+			if(meta.itemStack.isSimilar(stack))
+			{
+				return meta;
+			}
+		}
+		return null;
+	}
+	
 	public int getValue(ItemStack stack)
 	{
 		MoneyMetadata meta = this.isMoney(stack);

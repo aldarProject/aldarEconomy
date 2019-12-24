@@ -75,9 +75,7 @@ public class EventListener implements Listener
 		Inventory top = e.getView().getTopInventory();
 		if(top == null) return;
 		if(!(top.getType() == InventoryType.CHEST || top.getType() == InventoryType.ENDER_CHEST)) return;
-		long before = System.nanoTime();
 		this.chestTracker.onOpenEconomyChest(top, e.getPlayer());
-		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -87,10 +85,8 @@ public class EventListener implements Listener
 		if(top == null) return;
 		if(!(top.getType() == InventoryType.CHEST || top.getType() == InventoryType.ENDER_CHEST)) return;
 		
-		long before = System.nanoTime();
 		HumanEntity player = e.getPlayer();
 		this.chestTracker.onCloseEconomyChest(top, player);
-		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -132,14 +128,12 @@ public class EventListener implements Listener
 	public void onBlockBreak(BlockBreakEvent e)
 	{
 		if(e.isCancelled()) return;
-		long before = System.nanoTime();
 		Block b = e.getBlock();
 		BlockState bs = b.getState();
 		if(!(bs instanceof Container)) return;
 		Container c = (Container)bs;
 		if(!this.checker.isAllowdInventory(c.getInventory())) return;
 		this.chestTracker.onDestroyBlock(c);
-		Bukkit.getServer().broadcastMessage("time:" + ((System.nanoTime() - before) / 1000) + "μs");
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)

@@ -207,6 +207,7 @@ public class ItemTracker
 			
 			List<ItemWallet> list = new LinkedList<>(map.eMap.values());
 			Collections.sort(list);
+			
 			for(ItemWallet wallet : list)
 			{
 				int money = wallet.getMoney();

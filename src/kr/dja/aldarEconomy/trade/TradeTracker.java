@@ -43,4 +43,18 @@ public class TradeTracker
 		}
 		logger.log(Level.WARNING, "[force issuance] trigger:"+causeName+" action:"+type+" amount:"+amount+" loc:"+loc);
 	}
+	
+	public void normalIssuance(UUID playerUID, int amount, String type, IntLocation loc)
+	{
+		String causeName;
+		if(playerUID != null)
+		{
+			causeName = Bukkit.getPlayer(playerUID).getName()+"("+playerUID+")";
+		}
+		else
+		{
+			causeName = "System";
+		}
+		logger.log(Level.INFO, "[issuance] trigger:"+causeName+" action:"+type+" amount:"+amount+" loc:"+loc);
+	}
 }
