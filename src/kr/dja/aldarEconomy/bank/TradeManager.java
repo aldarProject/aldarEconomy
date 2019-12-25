@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.trade;
+package kr.dja.aldarEconomy.bank;
 
 public class TradeManager {
 

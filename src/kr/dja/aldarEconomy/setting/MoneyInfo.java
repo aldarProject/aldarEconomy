@@ -24,15 +24,12 @@ public class MoneyInfo
 	
 
 	public final List<MoneyMetadata> moneyList;
-	
-	public MoneyInfo()
-	{
-		this(dftMoneyMetadataInfo);
-	}
-	
+	public final int count;
+
 	MoneyInfo(List<MoneyMetadata> moneyMetadataInfo)
 	{
 		Collections.sort(moneyMetadataInfo);
+		this.count = moneyMetadataInfo.size();
 		this.moneyList = Collections.unmodifiableList(moneyMetadataInfo);
 	}
 }

@@ -29,7 +29,6 @@ public class ConfigLoader
 		this.plugin = plugin;
 		this.config = plugin.getConfig();
 		this.loadConfig();
-		this.moneyInfo = new MoneyInfo();
 	}
 	
 	public void saveConfig()
@@ -61,14 +60,12 @@ public class ConfigLoader
 		}
 		catch(Exception e)
 		{
-			moneyMetaList = null;
+			moneyMetaList = MoneyInfo.dftMoneyMetadataInfo;
 			this.plugin.getLogger().log(Level.WARNING, "moneymeta load error", e);
-			
+			this.saveConfig();
 		}
+		this.moneyInfo = new MoneyInfo(moneyMetaList);
 		
-		if(moneyMetaList != null && moneyMetaList.size() != 0)
-			this.moneyInfo = new MoneyInfo(moneyMetaList);
-		this.saveConfig();
 	}
 	
 	public MoneyInfo getMoneyInfo()

@@ -30,12 +30,12 @@ public abstract class EconomyMap<Depend, WalletType extends Wallet<Depend>>
 		this.callback.modifyMoney(wallet, amount);
 	}
 	
-	public int decreaseEconomy(Depend key, int amount)
+	public void decreaseEconomy(Depend key, int amount)
 	{// 돈을 빼고 지갑에 남은돈 반환해줌.
 		WalletType wallet = this._eMap.get(key);
 		if(wallet == null)
 		{
-			return -amount;
+			return;
 		}
 		int beforeMoney = wallet.money;
 		wallet.money -= amount;
@@ -51,8 +51,6 @@ public abstract class EconomyMap<Depend, WalletType extends Wallet<Depend>>
 			this.totalMoney -= amount;
 			this.callback.modifyMoney(wallet, -amount);
 		}
-		
-		return wallet.money;
 	}
 	
 	public int getMoney(Depend obj)

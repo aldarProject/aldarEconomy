@@ -19,6 +19,7 @@ import org.bukkit.plugin.Plugin;
 
 import kr.dja.aldarEconomy.EconomyUtil;
 import kr.dja.aldarEconomy.api.APITokenManager;
+import kr.dja.aldarEconomy.bank.TradeTracker;
 import kr.dja.aldarEconomy.dataObject.DependType;
 import kr.dja.aldarEconomy.dataObject.IntLocation;
 import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
@@ -29,7 +30,6 @@ import kr.dja.aldarEconomy.dataObject.player.PlayerEconomyStorage;
 import kr.dja.aldarEconomy.setting.MoneyMetadata;
 import kr.dja.aldarEconomy.tracker.chest.DestroyChestResult;
 import kr.dja.aldarEconomy.tracker.chest.DestroyChestResultMember;
-import kr.dja.aldarEconomy.trade.TradeTracker;
 
 public class ItemTracker
 {
@@ -66,14 +66,14 @@ public class ItemTracker
 	public void onPlayerDeathDropMoney(HumanEntity player, int amount)
 	{
 		UUID playerUID = player.getUniqueId();
-		
-		int result = this.playerStorage.decreaseEconomy(playerUID, amount);
-		if(result < 0)
+		int playerStorageMoney = this.playerStorage.getMoney(playerUID);
+		if(playerStorageMoney < amount)
 		{
-			int playerMoney = this.util.getPlayerInventoryMoney(player);
-			int diff = playerMoney - (amount + result);
-			this.tradeTracker.forceIssuance(playerUID, diff, "PLAYER_DEATH", new IntLocation(player.getLocation()));
+			int invMoney = this.util.getPlayerInventoryMoney(player);
+			this.playerStorage.increaseEconomy(playerUID, invMoney - playerStorageMoney);
+			this.tradeTracker.forceIssuance(playerUID, invMoney - playerStorageMoney, "PLAYER_DEATH", new IntLocation(player.getLocation()));
 		}
+		this.playerStorage.decreaseEconomy(playerUID, amount);
 		this.itemDropCheckMoneyQueue.add(new MoneyItemSpawnCacheData(MoneyItemSpawnCacheData.ENTITY_DEATH, playerUID, amount));
 		if(!this.hasNextTask)
 		{
@@ -233,14 +233,14 @@ public class ItemTracker
 	public void onPlayerDropMoney(HumanEntity player, Item item, int amount)
 	{
 		UUID playerUID = player.getUniqueId();
-		int result = this.playerStorage.decreaseEconomy(playerUID, amount);
-		if(result < 0)
+		int playerStorageMoney = this.playerStorage.getMoney(playerUID);
+		if(playerStorageMoney < amount)
 		{
-			int playerMoney = this.util.getPlayerInventoryMoney(player);
-			this.playerStorage.increaseEconomy(playerUID, playerMoney);
-			int diff = playerMoney - (amount + result) + amount;
-			this.tradeTracker.forceIssuance(playerUID, diff, "PLAYER_DROP_MONEY", new IntLocation(player.getLocation()));
+			int invMoney = this.util.getPlayerInventoryMoney(player);
+			this.playerStorage.increaseEconomy(playerUID, invMoney - playerStorageMoney + amount);
+			this.tradeTracker.forceIssuance(playerUID, invMoney - playerStorageMoney + amount, "PLAYER_DROP_MONEY", new IntLocation(player.getLocation()));
 		}
+		this.playerStorage.decreaseEconomy(playerUID, amount);
 		this.itemStorage.increaseEconomy(item.getUniqueId(), playerUID, DependType.PLAYER, amount);
 	}
 	

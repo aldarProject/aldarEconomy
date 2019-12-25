@@ -24,6 +24,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import kr.dja.aldarEconomy.EconomyUtil;
 import kr.dja.aldarEconomy.api.APITokenManager;
+import kr.dja.aldarEconomy.bank.TradeTracker;
 import kr.dja.aldarEconomy.dataObject.DependType;
 import kr.dja.aldarEconomy.dataObject.IntLocation;
 import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
@@ -32,7 +33,6 @@ import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
 import kr.dja.aldarEconomy.dataObject.enderChest.EnderChestEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.player.PlayerEconomyStorage;
 import kr.dja.aldarEconomy.tracker.item.ItemTracker;
-import kr.dja.aldarEconomy.trade.TradeTracker;
 
 public class ChestTracker
 {// 창고에 누가 얼마 넣었고 누가 얼마 뺐는지 추적
@@ -60,9 +60,19 @@ public class ChestTracker
 		this.closeChestItemDropCheck = new HashSet<>();
 	}
 	
-	public boolean isOpenedEconomyChest(Inventory chest)
+	public void onChestMoneyToPlayer(Container con, HumanEntity player, int amount)
 	{
-		return this.openedChestInfo.getOpenedChestInfo(chest) != null;
+		Inventory chest = con.getInventory();
+		OpenedChestMoneyMember info = this.openedChestInfo.getOpenedChestInfo(chest);
+		
+		
+	}
+	
+	public void onPlayerMoneyToChest(HumanEntity player, Container con, int amount)
+	{
+		Inventory chest = con.getInventory();
+		OpenedChestMoneyMember info = this.openedChestInfo.getOpenedChestInfo(chest);
+		
 	}
 	
 	public void onDestroyBlock(Container con)
@@ -111,6 +121,7 @@ public class ChestTracker
 				}
 				if(info != null) info.chestMoney -= discountAmount;
 				DestroyChestResult r = this.destoryChestCheckEconomy(map, discountAmount);
+				// 창고를 부술때는 chestClose이벤트가 먼저 발생하므로 계산 필요 없
 				this.itemTracker.onChestBreak(r);
 			}
 		}
@@ -247,15 +258,14 @@ public class ChestTracker
 		if(chestNow - chestBefore > 0)
 		{// 엔더체스트에 돈 집어넣음
 			amount = chestNow - chestBefore;
-			int result = this.playerStorage.decreaseEconomy(playerUID, amount);
-			if(result < 0)
+			int playerStorageMoney = this.playerStorage.getMoney(playerUID);
+			if(playerStorageMoney < amount)
 			{
-				int playerMoney = this.util.getPlayerInventoryMoney(player);
-				this.playerStorage.increaseEconomy(playerUID, playerMoney);
-				int diff = playerMoney - (amount + result) + amount;
-				this.tradeTracker.forceIssuance(playerUID, diff, "ENDERCHEST_TO_PLAYER", new IntLocation(player.getLocation()));
-				//logger.log(Level.WARNING, String.format("ChestTracker.enderChestCounting(): %s 존재하지 않는 돈 꺼냄(%d)", player.getName(), diff));
+				int invMoney = this.util.getPlayerInventoryMoney(player);
+				this.playerStorage.increaseEconomy(playerUID, invMoney - playerStorageMoney + amount);
+				this.tradeTracker.forceIssuance(playerUID, invMoney - playerStorageMoney + amount, "PLAYER_TO_ENDERCHEST", new IntLocation(player.getLocation()));
 			}
+			this.playerStorage.decreaseEconomy(playerUID, amount);
 			this.enderChestStorage.increaseEconomy(playerUID, amount);
 		}
 		else
@@ -317,15 +327,14 @@ public class ChestTracker
 	private void playerToChest(HumanEntity player, ChestEconomyChild map, int amount)
 	{
 		UUID playerUID = player.getUniqueId();
-		int remain = this.playerStorage.decreaseEconomy(playerUID, amount);
-		if(remain < 0)
+		int playerStorageMoney = this.playerStorage.getMoney(playerUID);
+		if(playerStorageMoney < amount)
 		{
-			int playerMoney = this.util.getPlayerInventoryMoney(player);
-			int realIssuance = playerMoney + (-remain);
-			//logger.log(Level.WARNING, String.format("ChestTracker.playerToChest(): %s 존재하지 않는 돈 꺼냄 인벤남음%d, 실제발급(%d) %d", player.getName(), playerMoney, realIssuance, remain));
-			this.playerStorage.increaseEconomy(playerUID, playerMoney);
-			this.tradeTracker.forceIssuance(playerUID, realIssuance, "PLAYER_TO_CHEST", new IntLocation(player.getLocation()));
+			int invMoney = this.util.getPlayerInventoryMoney(player);
+			this.playerStorage.increaseEconomy(playerUID, invMoney - playerStorageMoney + amount);
+			this.tradeTracker.forceIssuance(playerUID, invMoney - playerStorageMoney + amount, "PLAYER_TO_CHEST", new IntLocation(player.getLocation()));
 		}
+		this.playerStorage.decreaseEconomy(playerUID, amount);
 		this.chestStorage.increaseEconomy(map, playerUID, amount, DependType.PLAYER);
 		//Bukkit.getServer().broadcastMessage(String.format("PlayerToChest %s +%d(%d)", player.getName(), amount, map.getTotalMoney()));
 	}

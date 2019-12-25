@@ -9,14 +9,14 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import kr.dja.aldarEconomy.api.APITokenManager;
+import kr.dja.aldarEconomy.bank.Bank;
+import kr.dja.aldarEconomy.bank.TradeTracker;
 import kr.dja.aldarEconomy.command.CommandManager;
 import kr.dja.aldarEconomy.data.EconomyDataStorage;
 import kr.dja.aldarEconomy.eventListener.EventListener;
 import kr.dja.aldarEconomy.setting.ConfigLoader;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
 import kr.dja.aldarEconomy.tracker.item.ItemTracker;
-import kr.dja.aldarEconomy.trade.Bank;
-import kr.dja.aldarEconomy.trade.TradeTracker;
 
 public class AldarEconomy extends JavaPlugin
 {

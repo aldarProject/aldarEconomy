@@ -4,8 +4,8 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import kr.dja.aldarEconomy.bank.Bank;
 import kr.dja.aldarEconomy.data.EconomyDataStorage;
-import kr.dja.aldarEconomy.trade.Bank;
 
 public class CommandManager
 {
@@ -28,6 +28,9 @@ public class CommandManager
 		cmd.setExecutor(this.lookupCmd);
 		cmd.setTabCompleter(this.lookupCmd);
 		
+		cmd = this.plugin.getCommand(EconomyBankCmd.ADMIN_ISSUANCE_PLAYERMONEY_CMD);
+		cmd.setExecutor(this.bankCmd);
+		cmd.setTabCompleter(this.bankCmd);
 		cmd = this.plugin.getCommand(EconomyBankCmd.ADMIN_CONSUME_PLAYERMONEY_CMD);
 		cmd.setExecutor(this.bankCmd);
 		cmd.setTabCompleter(this.bankCmd);

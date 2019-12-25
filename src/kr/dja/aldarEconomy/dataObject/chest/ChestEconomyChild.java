@@ -51,10 +51,10 @@ public class ChestEconomyChild
 		this.callback.modifyMoney(this.uuid, key, wallet, amount);
 	}
 	
-	int decreaseEconomy(UUID key, int amount)
+	void decreaseEconomy(UUID key, int amount)
 	{// 지갑에 남은 돈 반환해줌, 음수면 오류인것
 		ChestWallet wallet = this._eMap.get(key);
-		if(wallet == null) return -amount;
+		if(wallet == null) return;
 		int beforeMoney = wallet.getMoney();
 		wallet.setMoney(wallet.getMoney() - amount);
 		
@@ -69,7 +69,7 @@ public class ChestEconomyChild
 			this.callback.modifyMoney(this.uuid, key, wallet, -amount);
 			this.totalMoney -= amount;
 		}
-		return beforeMoney - amount;
+		return;
 	}
 	
 	public int getMoney(UUID key)

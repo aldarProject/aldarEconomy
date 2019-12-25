@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.trade;
+package kr.dja.aldarEconomy.bank;
 
 import java.util.UUID;
 import java.util.logging.Level;
@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 
 import kr.dja.aldarEconomy.api.APITokenManager;
+import kr.dja.aldarEconomy.api.SystemID;
 import kr.dja.aldarEconomy.dataObject.DependType;
 import kr.dja.aldarEconomy.dataObject.IntLocation;
 
@@ -44,17 +45,13 @@ public class TradeTracker
 		logger.log(Level.WARNING, "[force issuance] trigger:"+causeName+" action:"+type+" amount:"+amount+" loc:"+loc);
 	}
 	
-	public void normalIssuance(UUID playerUID, int amount, String type, IntLocation loc)
+	public void normalConsume(SystemID system, int amount, IntLocation loc, String cause, String args)
 	{
-		String causeName;
-		if(playerUID != null)
-		{
-			causeName = Bukkit.getPlayer(playerUID).getName()+"("+playerUID+")";
-		}
-		else
-		{
-			causeName = "System";
-		}
-		logger.log(Level.INFO, "[issuance] trigger:"+causeName+" action:"+type+" amount:"+amount+" loc:"+loc);
+		logger.log(Level.INFO, "[consume] system:"+system.name+" amount:"+amount+" location:"+loc+" cause:"+amount+" args:"+args);
+	}
+	
+	public void normalIssuance(SystemID system, int amount, IntLocation loc, String cause, String args)
+	{
+		logger.log(Level.INFO, "[issuance] system:"+system.name+" amount:"+amount+" location:"+loc+" cause:"+amount+" args:"+args);
 	}
 }

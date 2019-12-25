@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import kr.dja.aldarEconomy.bank.TradeTracker;
 import kr.dja.aldarEconomy.dataObject.DependType;
 import kr.dja.aldarEconomy.dataObject.IntLocation;
 import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
@@ -23,7 +24,6 @@ import kr.dja.aldarEconomy.dataObject.itemEntity.ItemWallet;
 import kr.dja.aldarEconomy.dataObject.player.PlayerEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.player.PlayerWallet;
 import kr.dja.aldarEconomy.setting.MoneyInfo;
-import kr.dja.aldarEconomy.trade.TradeTracker;
 
 public class EconomyDataStorage
 {// dao
