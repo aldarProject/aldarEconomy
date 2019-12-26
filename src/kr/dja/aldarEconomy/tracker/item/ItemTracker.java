@@ -71,7 +71,7 @@ public class ItemTracker
 		{
 			int invMoney = this.util.getPlayerInventoryMoney(player);
 			this.playerStorage.increaseEconomy(playerUID, invMoney - playerStorageMoney);
-			this.tradeTracker.forceIssuance(playerUID, invMoney - playerStorageMoney, "PLAYER_DEATH", new IntLocation(player.getLocation()));
+			this.tradeTracker.forceRebalancing(playerUID, invMoney - playerStorageMoney, "PLAYER_DEATH", new IntLocation(player.getLocation()));
 		}
 		this.playerStorage.decreaseEconomy(playerUID, amount);
 		this.itemDropCheckMoneyQueue.add(new MoneyItemSpawnCacheData(MoneyItemSpawnCacheData.ENTITY_DEATH, playerUID, amount));
@@ -188,7 +188,7 @@ public class ItemTracker
 		IntLocation intLoc = new IntLocation(item.getLocation());
 		if(map == null)
 		{
-			this.tradeTracker.forceIssuance(playerUID, amount, "PLAYER_GAIN_MONEY", intLoc);
+			this.tradeTracker.forceRebalancing(playerUID, amount, "PLAYER_GAIN_MONEY", intLoc);
 			map = this.itemStorage.increaseEconomy(itemUID, player.getUniqueId(), DependType.PLAYER, amount);
 		}
 		ItemWallet[] walletArr = new ItemWallet[map.eMap.size()];
@@ -215,14 +215,14 @@ public class ItemTracker
 				if(leftMoney - money <= 0)
 				{
 					this.itemStorage.decreaseEconomy(itemUID, wallet.depend, leftMoney);
-					this.tradeTracker.tradeLog(playerUID, DependType.PLAYER, wallet.depend, wallet.ownerType, leftMoney, "ITEM_TRADE", intLoc);
+					this.tradeTracker.tradeLog(playerUID, DependType.PLAYER, wallet.depend, wallet.ownerType, leftMoney, intLoc, TradeTracker.SYSTEM_CAUSE, "ITEM_TRADE");
 					leftMoney = 0;
 					break;
 				}
 				else
 				{
 					this.itemStorage.decreaseEconomy(itemUID, wallet.depend, money);
-					this.tradeTracker.tradeLog(playerUID, DependType.PLAYER, wallet.depend, wallet.ownerType, money, "ITEM_TRADE", intLoc);
+					this.tradeTracker.tradeLog(playerUID, DependType.PLAYER, wallet.depend, wallet.ownerType, money, intLoc, TradeTracker.SYSTEM_CAUSE, "ITEM_TRADE");
 					leftMoney -= money;
 				}
 			}
@@ -238,7 +238,7 @@ public class ItemTracker
 		{
 			int invMoney = this.util.getPlayerInventoryMoney(player);
 			this.playerStorage.increaseEconomy(playerUID, invMoney - playerStorageMoney + amount);
-			this.tradeTracker.forceIssuance(playerUID, invMoney - playerStorageMoney + amount, "PLAYER_DROP_MONEY", new IntLocation(player.getLocation()));
+			this.tradeTracker.forceRebalancing(playerUID, invMoney - playerStorageMoney + amount, "PLAYER_DROP_MONEY", new IntLocation(player.getLocation()));
 		}
 		this.playerStorage.decreaseEconomy(playerUID, amount);
 		this.itemStorage.increaseEconomy(item.getUniqueId(), playerUID, DependType.PLAYER, amount);
@@ -287,7 +287,7 @@ public class ItemTracker
 			int money = wallet.getMoney();
 			
 			this.itemStorage.decreaseEconomy(itemUID, wallet.depend, money);
-			this.tradeTracker.tradeLog(wallet.depend, wallet.ownerType, APITokenManager.SYSTEM_TOKEN.uuid, DependType.SYSTEM, money, "MONEY_DESPAWN", intLoc);
+			this.tradeTracker.tradeLog(wallet.depend, wallet.ownerType, APITokenManager.SYSTEM_TOKEN.uuid, DependType.SYSTEM, money, intLoc, TradeTracker.SYSTEM_CAUSE, "MONEY_DESPAWN");
 		}
 	}
 	
@@ -297,7 +297,7 @@ public class ItemTracker
 
 		int amount = this.util.getValue(item.getItemStack());
 		ItemEconomyChild child = this.itemStorage.increaseEconomy(item.getUniqueId(), APITokenManager.SYSTEM_TOKEN.uuid, DependType.SYSTEM, amount);
-		this.tradeTracker.forceIssuance(null, amount, "ON_MONEY_MERGE", intLoc);
+		this.tradeTracker.forceRebalancing(null, amount, "ON_MONEY_MERGE", intLoc);
 		return child;
 	}
 

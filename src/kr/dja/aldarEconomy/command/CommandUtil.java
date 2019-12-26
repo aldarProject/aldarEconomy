@@ -4,8 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.Container;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
+
+import kr.dja.aldarEconomy.EconomyUtil;
 
 public class CommandUtil
 {
@@ -48,5 +57,60 @@ public class CommandUtil
 			}
 		}
 		return result;
+	}
+	
+	
+	public static Inventory getTargetChest(EconomyUtil util, CommandSender sender)
+	{
+		if(!(sender instanceof LivingEntity))
+		{
+			sender.sendMessage("명령 실패: 잘못된 시전자.");
+			return null;
+		}
+		Block b = ((LivingEntity)sender).getTargetBlock(null, 100);
+		if(!(b != null && b.getState() instanceof Container))
+		{
+			sender.sendMessage("명령 실패: 창고가 아닙니다. " + b.getType());
+			return null;
+		}
+		Inventory i = ((Container)b.getState()).getInventory();
+		if(!(util.isAllowdInventory(i) && i.getType() != InventoryType.ENDER_CHEST))
+		{
+			sender.sendMessage("명령 실패: 지원하지 않는 창고.");
+			return null;
+		}
+		return i;
+	}
+	
+	public static Location getTargetingLocation(CommandSender sender)
+	{
+		if(!(sender instanceof LivingEntity))
+		{
+			sender.sendMessage("명령 실패: 잘못된 시전자.");
+			return null;
+		}
+		Block b = ((LivingEntity)sender).getTargetBlock(null, 100);
+		if(b.getType() == Material.AIR)
+		{
+			sender.sendMessage("명령 실패: 잘못된 위치.");
+			return null;
+		}
+		Location loc = b.getLocation();
+		loc.setY(loc.getY() + 1);
+		return loc;
+		
+	}
+	
+	public static int getNumber(String[] args, int index)
+	{
+		int amount = -1;
+		try
+		{
+			amount = Integer.parseInt(args[0]);
+		}
+		catch (NumberFormatException e)
+		{
+		}
+		return amount;
 	}
 }

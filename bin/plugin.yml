@@ -16,3 +16,18 @@ commands:
     moneyconsume:
         description: decrease target player money
         usage: /moneyconsume <amount> [player]
+    moneychestissuance:
+        description: increase target chest money
+        usage: /moneychestissuance <amount>
+    moneychestconsume:
+        description: decrease target chest money
+        usage: /moneychestconsume <amount>
+    moneyitemissuance:
+        description: create moneyitem on target
+        usage: /moneyitemissuance <amount>
+    moneyp2c:
+        description: move player money to target chest
+        usage: /moneyp2c <amount> [player]
+    moneyc2p:
+        description: move target chest money to player
+        usage: /moneyc2p <amount> [player]

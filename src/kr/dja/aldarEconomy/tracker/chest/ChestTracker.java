@@ -22,8 +22,11 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
+
 import kr.dja.aldarEconomy.EconomyUtil;
 import kr.dja.aldarEconomy.api.APITokenManager;
+import kr.dja.aldarEconomy.api.SystemID;
 import kr.dja.aldarEconomy.bank.TradeTracker;
 import kr.dja.aldarEconomy.dataObject.DependType;
 import kr.dja.aldarEconomy.dataObject.IntLocation;
@@ -60,19 +63,128 @@ public class ChestTracker
 		this.closeChestItemDropCheck = new HashSet<>();
 	}
 	
-	public void onChestMoneyToPlayer(Container con, HumanEntity player, int amount)
+	public void onPlayerIncreaseMoney(HumanEntity player, int amount)
 	{
-		Inventory chest = con.getInventory();
-		OpenedChestMoneyMember info = this.openedChestInfo.getOpenedChestInfo(chest);
-		
-		
+		OpenedChestMoneyMember pinfo = this.openedChestInfo.getOpenedChestInfo(this.getPlayerTopInv(player));
+		if(pinfo != null)
+		{
+			int pMoney = pinfo.playerMoneyMap.getOrDefault(player, -1);
+			if(pMoney != -1)
+			{
+				pinfo.playerMoneyMap.put(player, pMoney + amount);
+			}
+		}
 	}
 	
-	public void onPlayerMoneyToChest(HumanEntity player, Container con, int amount)
+	public void onPlayerDecreaseMoney(HumanEntity player, int amount)
 	{
-		Inventory chest = con.getInventory();
-		OpenedChestMoneyMember info = this.openedChestInfo.getOpenedChestInfo(chest);
+		OpenedChestMoneyMember pinfo = this.openedChestInfo.getOpenedChestInfo(this.getPlayerTopInv(player));
+		if(pinfo != null)
+		{
+			int pMoney = pinfo.playerMoneyMap.getOrDefault(player, -1);
+			if(pMoney != -1)
+			{
+				pinfo.playerMoneyMap.put(player, pMoney - amount);
+			}
+			this.chestMoneyCounting(pinfo);
+		}
+	}
+	
+	public void onChestMoneyToPlayer(Inventory chest, HumanEntity player, int amount)
+	{
+		Inventory ptop = this.getPlayerTopInv(player);
+		if(chest.equals(ptop))
+		{
+			return;
+		}
 		
+		OpenedChestMoneyMember info = this.openedChestInfo.getOpenedChestInfo(chest);
+		this.onPlayerIncreaseMoney(player, amount);
+		if(info != null)
+		{
+			info.chestMoney -= amount;
+			this.chestMoneyCounting(info);
+		}
+		ChestEconomyChild map = this.findAndAlignChestMap(chest.getHolder());
+		
+		this.chestToPlayer(map, chest, player, amount);
+	}
+	
+	public void onPlayerMoneyToChest(HumanEntity player, Inventory chest, int amount)
+	{
+		Inventory ptop = this.getPlayerTopInv(player);
+		if(chest.equals(ptop))
+		{
+			return;
+		}
+		
+		OpenedChestMoneyMember info = this.openedChestInfo.getOpenedChestInfo(chest);
+		this.onPlayerDecreaseMoney(player, amount);
+		if(info != null)
+		{
+			info.chestMoney += amount;
+		}
+		
+		ChestEconomyChild map = this.findAndAlignChestMap(chest.getHolder());
+		this.playerToChest(player, map, amount);
+	}
+	
+	public void onIssuanceToChest(SystemID system, Inventory chest, int amount)
+	{
+		OpenedChestMoneyMember info = this.openedChestInfo.getOpenedChestInfo(chest);
+		if(info != null)
+		{
+			info.chestMoney += amount;
+		}
+		ChestEconomyChild map = this.findAndAlignChestMap(chest.getHolder());
+		this.chestStorage.increaseEconomy(map, system.uuid, amount, DependType.SYSTEM);
+	}
+	
+	private Inventory getPlayerTopInv(HumanEntity player)
+	{
+		InventoryView v = player.getOpenInventory();
+		if(v != null) return v.getTopInventory();
+		return null;
+	}
+	
+	public void onConsumeFromChest(Inventory chest, int amount, SystemID id, String cause, String args)
+	{
+		OpenedChestMoneyMember info = this.openedChestInfo.getOpenedChestInfo(chest);
+		if(info != null)
+		{
+			info.chestMoney -= amount;
+			this.chestMoneyCounting(info);
+		}
+		ChestEconomyChild map = this.findAndAlignChestMap(chest.getHolder());
+		IntLocation intLoc = new IntLocation(chest.getLocation());
+		if(map.getTotalMoney() < amount)
+		{
+			int chestMoney = this.util.getInventoryMoney(chest);
+			int diff = chestMoney - map.getTotalMoney() + amount;
+			this.chestStorage.increaseEconomy(map, APITokenManager.SYSTEM_TOKEN.uuid, diff, DependType.SYSTEM);
+			this.tradeTracker.forceRebalancing(null, diff, "ON_CONSUME_FROM_CHEST", intLoc);
+		}
+		List<ChestWallet> list = new LinkedList<>(map.eMap.values());
+		Collections.sort(list);
+		int leftMoney = amount;
+		for(ChestWallet wallet : list)
+		{
+			UUID depend = wallet.depend;
+			int money = wallet.getMoney();
+			if(leftMoney - money <= 0)
+			{
+				this.chestStorage.decreaseEconomy(map, depend, leftMoney);
+				this.tradeTracker.normalConsume(id, depend, wallet.ownerType, leftMoney, intLoc, cause, args);
+				leftMoney = 0;
+				break;
+			}
+			else
+			{
+				this.chestStorage.decreaseEconomy(map, depend, money);
+				this.tradeTracker.normalConsume(id, depend, wallet.ownerType, money, intLoc, cause, args);
+				leftMoney -= money;
+			}
+		}
 	}
 	
 	public void onDestroyBlock(Container con)
@@ -116,7 +228,7 @@ public class ChestTracker
 					int chestMoney = this.util.getInventoryMoney(chest);
 					int diff = chestMoney - map.getTotalMoney();
 					this.chestStorage.increaseEconomy(map, APITokenManager.SYSTEM_TOKEN.uuid, diff, DependType.SYSTEM);
-					this.tradeTracker.forceIssuance(null, diff, "ON_DESTROY_BLOCK", intLoc);
+					this.tradeTracker.forceRebalancing(null, diff, "ON_DESTROY_BLOCK", intLoc);
 					//logger.log(Level.WARNING, String.format("ChestTracker.onDestroyBlock(): %s 존재하지 않는 돈 꺼냄(%d)", intLoc, diff));
 				}
 				if(info != null) info.chestMoney -= discountAmount;
@@ -193,12 +305,12 @@ public class ChestTracker
 				if(dbMoney < chestMoney)
 				{//chestMoney가 더 클때(즉, db의 돈을 더해야함)
 					this.enderChestStorage.increaseEconomy(playerUID, chestMoney - dbMoney);
-					this.tradeTracker.forceIssuance(playerUID, chestMoney - dbMoney, "ENDERCHEST_OPEN", new IntLocation(player.getLocation()));
+					this.tradeTracker.forceRebalancing(playerUID, chestMoney - dbMoney, "ENDERCHEST_OPEN", new IntLocation(player.getLocation()));
 				}
 				else
 				{//chestMoney가 더 작을때(즉, db의 돈을 빼야함)
 					this.enderChestStorage.decreaseEconomy(playerUID, dbMoney - chestMoney);
-					this.tradeTracker.forceIssuance(playerUID, chestMoney - dbMoney, "ENDERCHEST_OPEN", new IntLocation(player.getLocation()));
+					this.tradeTracker.forceRebalancing(playerUID, chestMoney - dbMoney, "ENDERCHEST_OPEN", new IntLocation(player.getLocation()));
 				}
 			}
 			
@@ -263,7 +375,7 @@ public class ChestTracker
 			{
 				int invMoney = this.util.getPlayerInventoryMoney(player);
 				this.playerStorage.increaseEconomy(playerUID, invMoney - playerStorageMoney + amount);
-				this.tradeTracker.forceIssuance(playerUID, invMoney - playerStorageMoney + amount, "PLAYER_TO_ENDERCHEST", new IntLocation(player.getLocation()));
+				this.tradeTracker.forceRebalancing(playerUID, invMoney - playerStorageMoney + amount, "PLAYER_TO_ENDERCHEST", new IntLocation(player.getLocation()));
 			}
 			this.playerStorage.decreaseEconomy(playerUID, amount);
 			this.enderChestStorage.increaseEconomy(playerUID, amount);
@@ -284,7 +396,7 @@ public class ChestTracker
 		{
 			int diff = this.util.getInventoryMoney(inv) - map.getTotalMoney() + amount;
 			this.chestStorage.increaseEconomy(map, playerUID, diff, DependType.PLAYER);
-			this.tradeTracker.forceIssuance(playerUID, diff, "CHEST_TO_PLAYER", chestLoc);
+			this.tradeTracker.forceRebalancing(playerUID, diff, "CHEST_TO_PLAYER", chestLoc);
 			//logger.log(Level.WARNING, String.format("ChestTracker.chestToPlayer(): %s 존재하지 않는 돈 꺼냄(%d)", player.getName(), diff));
 		}
 		
@@ -309,14 +421,14 @@ public class ChestTracker
 				if(leftMoney - money <= 0)
 				{
 					this.chestStorage.decreaseEconomy(map, wallet.depend, leftMoney);
-					this.tradeTracker.tradeLog(playerUID, DependType.PLAYER, wallet.depend, wallet.ownerType, leftMoney, "CHEST_TRADE", chestLoc);
+					this.tradeTracker.tradeLog(playerUID, DependType.PLAYER, wallet.depend, wallet.ownerType, leftMoney, chestLoc, TradeTracker.SYSTEM_CAUSE, "CHEST_TRADE");
 					leftMoney = 0;
 					break;
 				}
 				else
 				{
 					this.chestStorage.decreaseEconomy(map, wallet.depend, money);
-					this.tradeTracker.tradeLog(playerUID, DependType.PLAYER, wallet.depend, wallet.ownerType, money, "CHEST_TRADE", chestLoc);
+					this.tradeTracker.tradeLog(playerUID, DependType.PLAYER, wallet.depend, wallet.ownerType, money, chestLoc, TradeTracker.SYSTEM_CAUSE, "CHEST_TRADE");
 					leftMoney -= money;
 				}
 			}
@@ -332,7 +444,7 @@ public class ChestTracker
 		{
 			int invMoney = this.util.getPlayerInventoryMoney(player);
 			this.playerStorage.increaseEconomy(playerUID, invMoney - playerStorageMoney + amount);
-			this.tradeTracker.forceIssuance(playerUID, invMoney - playerStorageMoney + amount, "PLAYER_TO_CHEST", new IntLocation(player.getLocation()));
+			this.tradeTracker.forceRebalancing(playerUID, invMoney - playerStorageMoney + amount, "PLAYER_TO_CHEST", new IntLocation(player.getLocation()));
 		}
 		this.playerStorage.decreaseEconomy(playerUID, amount);
 		this.chestStorage.increaseEconomy(map, playerUID, amount, DependType.PLAYER);

@@ -264,7 +264,6 @@ public class EventListener implements Listener
 		if(currentMoney == null && cursorMoeny == null) return;
 		Inventory top = e.getView().getTopInventory();
 		Inventory clickedInv = e.getClickedInventory();
-		
 		if(top != null && !this.checker.isAllowdInventory(top))
 		{// 돈이면 허용된 인벤토리에만 집어넣을수 있음.
 			if(top == clickedInv)

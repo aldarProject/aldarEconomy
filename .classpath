@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="lib/gson-2.6.2-javadoc.jar"/>
 	<classpathentry kind="lib" path="lib/BKCommonLib-1.14.4-v1.jar"/>
 	<classpathentry kind="lib" path="lib/mariadb-java-client-2.4.4.jar"/>
+	<classpathentry kind="lib" path="lib/Vault.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

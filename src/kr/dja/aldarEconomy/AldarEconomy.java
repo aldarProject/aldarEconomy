@@ -20,7 +20,7 @@ import kr.dja.aldarEconomy.tracker.item.ItemTracker;
 
 public class AldarEconomy extends JavaPlugin
 {
-	public static final String SYSTEM_ID = "EconomyMaster";
+	public static final String PLUGIN_NAME = "aldarEconomy";
 	
 	private Logger logger;
 	private String version;
@@ -61,9 +61,12 @@ public class AldarEconomy extends JavaPlugin
 		this.logger.info("\n"+this.configLoader.toString());
 		this.pluginManager.registerEvents(this.eventListener, this);
 		
-		this.commandManager = new CommandManager(this, this.storage, this.bank);
+		this.commandManager = new CommandManager(this, this.storage, this.bank, this.util);
 		
 		this.logger.info("Aldar Economy"+version+" enabled by camelCase");
+		
+		
+		
 	}
 	
 	@Override

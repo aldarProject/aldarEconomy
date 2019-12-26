@@ -11,7 +11,7 @@ import kr.dja.aldarEconomy.setting.MoneyMetadata;
 public class EconomyUtil
 {
 	private final MoneyInfo moneyInfo;
-	
+
 	public EconomyUtil(MoneyInfo moneyInfo)
 	{
 		this.moneyInfo = moneyInfo;
