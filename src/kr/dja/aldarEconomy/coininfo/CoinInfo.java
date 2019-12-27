@@ -23,9 +23,9 @@ public class CoinInfo implements ConfigurationMember
 		ItemStack money100 = new ItemStack(Material.GOLD_INGOT, 1);
 		ItemStack money1000 = new ItemStack(Material.DIAMOND, 1);
 		
-		dftMoneyMetadataInfo.add(new CoinMetadata("iron", money10, 10));
+		dftMoneyMetadataInfo.add(new CoinMetadata("iron", money10, 1));
 		dftMoneyMetadataInfo.add(new CoinMetadata("gold", money100, 100));
-		dftMoneyMetadataInfo.add(new CoinMetadata("dia", money1000, 1000));
+		dftMoneyMetadataInfo.add(new CoinMetadata("dia", money1000, 10000));
 	}
 	
 

@@ -2,6 +2,9 @@ package kr.dja.aldarEconomy.api;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.HumanEntity;
@@ -20,7 +23,8 @@ public class VaultEconomyProvider implements Economy
 	private static final String CAUSE_API_ACCESS = "valut_api_access";
 	
 	private final Plugin plugin;
-	private AldarEconomyProvider provider;
+	private final AldarEconomyProvider provider;
+	private final Logger logger;
 	
 	private final BukkitScheduler scheduler;
 	
@@ -29,11 +33,12 @@ public class VaultEconomyProvider implements Economy
 	private final SystemID valutToken;
 	
 	
-	public VaultEconomyProvider(APITokenManager tokenManager, Plugin plugin, AldarEconomyProvider provider)
+	public VaultEconomyProvider(APITokenManager tokenManager, Plugin plugin, AldarEconomyProvider provider, Logger logger)
 	{
 		this.valutToken = tokenManager.takeOrRegisterAPIToken("vault");
 		this.plugin = plugin;
 		this.provider = provider;
+		this.logger = logger;
 		this.scheduler = Bukkit.getScheduler();
 	}
 	
@@ -285,13 +290,12 @@ public class VaultEconomyProvider implements Economy
     	HumanEntity player = Bukkit.getPlayer(op.getUniqueId());
     	int intAmount = (int)amount;
     	EconomyResult result = this.provider.withdrawPlayer(player, intAmount, this.valutToken, CAUSE_API_ACCESS, "withdrawPlayer");
+    	int playerMoney = this.provider.getPlayerInventoryMoney(op);
     	if(result == EconomyResult.OK)
     	{
-    		int playerMoney = this.provider.getPlayerInventoryMoney(op);
     		return new EconomyResponse(-intAmount, playerMoney, ResponseType.SUCCESS, null);
     	}
-
-    	return new EconomyResponse(0, 0, ResponseType.FAILURE, result.toString());
+    	return new EconomyResponse(0, playerMoney, ResponseType.FAILURE, result.toString());
     }
 
     /**
@@ -341,13 +345,13 @@ public class VaultEconomyProvider implements Economy
     	HumanEntity player = Bukkit.getPlayer(op.getUniqueId());
     	int intAmount = (int)amount;
     	EconomyResult result = this.provider.depositPlayer(player, intAmount, this.valutToken, CAUSE_API_ACCESS, "depositPlayer");
+    	int playerMoney = this.provider.getPlayerInventoryMoney(op);
     	if(result == EconomyResult.OK)
     	{
-    		int playerMoney = this.provider.getPlayerInventoryMoney(op);
     		return new EconomyResponse(intAmount, playerMoney, ResponseType.SUCCESS, null);
     	}
 
-    	return new EconomyResponse(0, 0, ResponseType.FAILURE, result.toString());
+    	return new EconomyResponse(0, playerMoney, ResponseType.FAILURE, result.toString());
     }
 
     /**

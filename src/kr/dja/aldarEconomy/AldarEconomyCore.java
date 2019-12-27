@@ -82,7 +82,7 @@ public class AldarEconomyCore extends JavaPlugin
 		
 		this.provider = new AldarEconomyProvider(this, this.storage, this.bank, this.util);
 		this.commandManager = new CommandManager(this, this.storage, this.provider);
-		this.vaultProvider = new VaultEconomyProvider(this.apiTokenManager, this, this.provider);
+		this.vaultProvider = new VaultEconomyProvider(this.apiTokenManager, this, this.provider, this.logger);
 		
 		this.vaultProvider.setState(true);
 		

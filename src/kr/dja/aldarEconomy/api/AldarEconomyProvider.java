@@ -87,7 +87,6 @@ public class AldarEconomyProvider implements AldarEconomy
 
 			return this.convertResult(actionResult);
 		});
-		
 	}
 
 	@Override
