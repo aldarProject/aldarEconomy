@@ -39,7 +39,7 @@ public class EconomyLookupCmd implements CommandExecutor, TabCompleter
 			HumanEntity player = CommandUtil.getPlayer(sender, args, 1);
 			if(player == null) return false;
 			UUID id = player.getUniqueId();
-			long money = this.storage.getPlayerMoney(id);
+			long money = this.storage.getPlayerMoneyTotal(id);
 			player.sendMessage(String.format("%s님의 돈은 %d", player.getName(), money));
 			break;
 		}
@@ -48,7 +48,7 @@ public class EconomyLookupCmd implements CommandExecutor, TabCompleter
 			HumanEntity player = CommandUtil.getPlayer(sender, args, 1);
 			if(player == null) return false;
 			UUID id = player.getUniqueId();
-			long money = this.storage.getPlayerMoney(id);
+			long money = this.storage.getPlayerMoneyTotal(id);
 			long playerInvMoney = this.storage.playerDependEconomy.getMoney(id);
 			long chestMoney = 0;
 			long itemMoney = 0;

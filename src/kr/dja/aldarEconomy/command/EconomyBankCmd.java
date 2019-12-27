@@ -15,10 +15,10 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 
 import kr.dja.aldarEconomy.EconomyUtil;
-import kr.dja.aldarEconomy.api.APITokenManager;
+import kr.dja.aldarEconomy.IntLocation;
+import kr.dja.aldarEconomy.api.token.APITokenManager;
 import kr.dja.aldarEconomy.bank.Bank;
-import kr.dja.aldarEconomy.bank.BankActionResult;
-import kr.dja.aldarEconomy.dataObject.IntLocation;
+import kr.dja.aldarEconomy.bank.EconomyActionResult;
 
 public class EconomyBankCmd implements CommandExecutor, TabCompleter
 {
@@ -30,6 +30,9 @@ public class EconomyBankCmd implements CommandExecutor, TabCompleter
 	public static final String ADMIN_ISSUANCE_ITEMMONEY_CMD = "moneyitemissuance";
 	public static final String ADMIN_MOVE_PLAYER_TO_CHEST = "moneyp2c";
 	public static final String ADMIN_MOVE_CHEST_TO_PLAYER = "moneyc2p";
+	public static final String ADMIN_MOVE_PLAYER_TO_PLAYER = "moneyp2p";
+	
+	private static final String CMD_CAUSE = "CMD";
 	
 	private final Bank bank;
 	private final EconomyUtil util;
@@ -64,8 +67,8 @@ public class EconomyBankCmd implements CommandExecutor, TabCompleter
 			if(player == null) return false;
 			int amount = CommandUtil.getNumber(args, 0);
 			if(amount <= 0) return false;
-			BankActionResult result = this.bank.consumeFromPlayer(APITokenManager.SYSTEM_TOKEN, player, amount, "command", null);
-			if(result != BankActionResult.OK)
+			EconomyActionResult result = this.bank.consumeFromPlayer(APITokenManager.SYSTEM_TOKEN, player, amount, CMD_CAUSE, null);
+			if(result != EconomyActionResult.OK)
 			{
 				sender.sendMessage("명령 실패: " + result);
 				return true;
@@ -80,8 +83,8 @@ public class EconomyBankCmd implements CommandExecutor, TabCompleter
 			if(player == null) return false;
 			int amount = CommandUtil.getNumber(args, 0);
 			if(amount <= 0) return false;
-			BankActionResult result = this.bank.issuanceToPlayer(APITokenManager.SYSTEM_TOKEN, player, amount, "command", null);
-			if(result != BankActionResult.OK)
+			EconomyActionResult result = this.bank.issuanceToPlayer(APITokenManager.SYSTEM_TOKEN, player, amount, CMD_CAUSE, null);
+			if(result != EconomyActionResult.OK)
 			{
 				sender.sendMessage("명령 실패: " + result);
 				return true;
@@ -96,8 +99,8 @@ public class EconomyBankCmd implements CommandExecutor, TabCompleter
 			if(i == null) return true;
 			int amount = CommandUtil.getNumber(args, 0);
 			if(amount <= 0) return false;
-			BankActionResult result = this.bank.consumeFromChest(APITokenManager.SYSTEM_TOKEN, i, amount, "command", null);
-			if(result != BankActionResult.OK)
+			EconomyActionResult result = this.bank.consumeFromChest(APITokenManager.SYSTEM_TOKEN, i, amount, CMD_CAUSE, null);
+			if(result != EconomyActionResult.OK)
 			{
 				sender.sendMessage("명령 실패: " + result);
 				return true;
@@ -113,8 +116,8 @@ public class EconomyBankCmd implements CommandExecutor, TabCompleter
 			if(i == null) return true;
 			int amount = CommandUtil.getNumber(args, 0);
 			if(amount <= 0) return false;
-			BankActionResult result = this.bank.issuanceToChest(APITokenManager.SYSTEM_TOKEN, i, amount, "command", null);
-			if(result != BankActionResult.OK)
+			EconomyActionResult result = this.bank.issuanceToChest(APITokenManager.SYSTEM_TOKEN, i, amount, CMD_CAUSE, null);
+			if(result != EconomyActionResult.OK)
 			{
 				sender.sendMessage("명령 실패: " + result);
 				return true;
@@ -129,8 +132,8 @@ public class EconomyBankCmd implements CommandExecutor, TabCompleter
 			if(loc == null) return true;
 			int amount = CommandUtil.getNumber(args, 0);
 			if(amount <= 0) return false;
-			BankActionResult result = this.bank.issuanceToItem(APITokenManager.SYSTEM_TOKEN, loc, amount, "command", null);
-			if(result != BankActionResult.OK)
+			EconomyActionResult result = this.bank.issuanceToItem(APITokenManager.SYSTEM_TOKEN, loc, amount, CMD_CAUSE, null);
+			if(result != EconomyActionResult.OK)
 			{
 				sender.sendMessage("명령 실패: " + result);
 				return true;
@@ -147,8 +150,8 @@ public class EconomyBankCmd implements CommandExecutor, TabCompleter
 			HumanEntity player = CommandUtil.getPlayer(sender, args, 2);
 			int amount = CommandUtil.getNumber(args, 0);
 			if(amount <= 0) return false;
-			BankActionResult result = this.bank.movePlayerMoneyToChest(player, i, amount);
-			if(result != BankActionResult.OK)
+			EconomyActionResult result = this.bank.movePlayerMoneyToChest(player, i, amount);
+			if(result != EconomyActionResult.OK)
 			{
 				sender.sendMessage("명령 실패: " + result);
 				return true;
@@ -164,13 +167,37 @@ public class EconomyBankCmd implements CommandExecutor, TabCompleter
 			HumanEntity player = CommandUtil.getPlayer(sender, args, 2);
 			int amount = CommandUtil.getNumber(args, 0);
 			if(amount <= 0) return false;
-			BankActionResult result = this.bank.moveChestMoneyToPlayer(i, player, amount);
-			if(result != BankActionResult.OK)
+			EconomyActionResult result = this.bank.moveChestMoneyToPlayer(i, player, amount);
+			if(result != EconomyActionResult.OK)
 			{
 				sender.sendMessage("명령 실패: " + result);
 				return true;
 			}
 			sender.sendMessage("명령 성공: "+new IntLocation(i.getLocation())+"의 돈을 "+player.getName()+"에게 "+amount+"만큼 이동합니다.");
+		}
+		case ADMIN_MOVE_PLAYER_TO_PLAYER:
+		{
+			if(args.length < 2) return false;
+			HumanEntity target = CommandUtil.getPlayer(sender, args, 2);
+			if(target == null) return false;
+			HumanEntity source = CommandUtil.getPlayer(sender, args, 3);
+			if(source == null) return false;
+			int amount = CommandUtil.getNumber(args, 0);
+			if(amount <= 0) return false;
+			if(target.getUniqueId().equals(source.getUniqueId()))
+			{
+				sender.sendMessage("명령 실패: 소스와 타깃이 같습니다.");
+				return true;
+			}
+			
+			EconomyActionResult result = this.bank.movePlayerMoneyToPlayer(source, target, amount, CMD_CAUSE, null);
+			if(result != EconomyActionResult.OK)
+			{
+				sender.sendMessage("명령 실패: " + result);
+				return true;
+			}
+			sender.sendMessage("명령 성공: "+source.getName()+"의 돈을 "+target.getName()+"에게 "+amount+"만큼 이동합니다.");
+			break;
 		}
 		}
 		return true;

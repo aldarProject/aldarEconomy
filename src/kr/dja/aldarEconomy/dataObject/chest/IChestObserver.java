@@ -2,7 +2,7 @@ package kr.dja.aldarEconomy.dataObject.chest;
 
 import java.util.UUID;
 
-import kr.dja.aldarEconomy.dataObject.IntLocation;
+import kr.dja.aldarEconomy.IntLocation;
 
 public interface IChestObserver
 {

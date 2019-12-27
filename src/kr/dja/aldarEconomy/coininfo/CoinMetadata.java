@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.setting;
+package kr.dja.aldarEconomy.coininfo;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,14 +6,14 @@ import java.util.Map;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.inventory.ItemStack;
 
-public class MoneyMetadata implements ConfigurationSerializable, Comparable<MoneyMetadata>
+public class CoinMetadata implements ConfigurationSerializable, Comparable<CoinMetadata>
 {
 	public final String name;
 	public final ItemStack itemStack;
 	public final int value;
 	public final int maxStack;
 	
-	MoneyMetadata(String name, ItemStack itemStack, int value)
+	CoinMetadata(String name, ItemStack itemStack, int value)
 	{
 		this.name = name;
 		this.itemStack = itemStack;
@@ -41,7 +41,7 @@ public class MoneyMetadata implements ConfigurationSerializable, Comparable<Mone
 		
 	}
 
-	public static MoneyMetadata deserialize(Map<String, Object> args)
+	public static CoinMetadata deserialize(Map<String, Object> args)
 	{
 		String name = (String) args.get("name");
 		
@@ -51,12 +51,11 @@ public class MoneyMetadata implements ConfigurationSerializable, Comparable<Mone
 		
 		int value = (Integer) args.get("value");
 		
-		return new MoneyMetadata(name, itemStack, value);
-		
+		return new CoinMetadata(name, itemStack, value);
 	}
-
+	
 	@Override
-	public int compareTo(MoneyMetadata o)
+	public int compareTo(CoinMetadata o)
 	{
 		return this.value - o.value;
 	}

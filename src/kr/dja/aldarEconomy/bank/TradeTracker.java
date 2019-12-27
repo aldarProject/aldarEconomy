@@ -6,10 +6,10 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 
-import kr.dja.aldarEconomy.api.APITokenManager;
-import kr.dja.aldarEconomy.api.SystemID;
+import kr.dja.aldarEconomy.IntLocation;
+import kr.dja.aldarEconomy.api.token.APITokenManager;
+import kr.dja.aldarEconomy.api.token.SystemID;
 import kr.dja.aldarEconomy.dataObject.DependType;
-import kr.dja.aldarEconomy.dataObject.IntLocation;
 
 
 public class TradeTracker

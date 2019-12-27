@@ -31,3 +31,6 @@ commands:
     moneyc2p:
         description: move target chest money to player
         usage: /moneyc2p <amount> [player]
+    moneyp2p:
+        description: move target player money to player
+        usage: /moneyc2p <amount> <target> [source>]

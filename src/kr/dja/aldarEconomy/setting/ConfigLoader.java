@@ -1,87 +1,73 @@
 package kr.dja.aldarEconomy.setting;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ConfigLoader
 {
-	public static final String KEY_MONEYMETA = "moneyMetadata";
-	
-	public static final String KEY_DBADDR = "dbAddr";
-	public static final String KEY_DBID = "dbID";
-	public static final String KEY_DBPW = "dbPassword";
-	
 	private final JavaPlugin plugin;
+	private final Logger logger;
 	private final FileConfiguration config;
 	
-	private MoneyInfo moneyInfo;
+	private final Map<String, ConfigurationMember> module;
 	
-	public ConfigLoader(JavaPlugin plugin)
+	public ConfigLoader(JavaPlugin plugin, Logger logger)
 	{
 		this.plugin = plugin;
+		this.logger = logger;
 		this.config = plugin.getConfig();
-		this.loadConfig();
+		this.module = new HashMap<>();
+	}
+	
+	public void registerModule(String key, ConfigurationMember module)
+	{
+		this.module.put(key, module);
 	}
 	
 	public void saveConfig()
 	{
-		List<Map<String, Object>> moneyMetaMapList = new ArrayList<Map<String,Object>>();
-		for(MoneyMetadata moneyMeta : this.moneyInfo.moneyList)
+		for(String key : this.module.keySet())
 		{
-			moneyMetaMapList.add(moneyMeta.serialize());
+			ConfigurationMember module = this.module.get(key);
+			this.config.set(key, module.serialize());
 		}
-		this.config.set(KEY_MONEYMETA, moneyMetaMapList);
 		
 		this.plugin.saveConfig();
 	}
 	
 	public void loadConfig()
 	{
-		
-		List<MoneyMetadata> moneyMetaList = new ArrayList<>();
-		try
+		for(String key : this.module.keySet())
 		{
-			List<?> moneyMetaObjList = this.config.getList(KEY_MONEYMETA);
-			for(Object moneyMetaMap : moneyMetaObjList)
+			ConfigurationMember module = this.module.get(key);
+			logger.log(Level.INFO, "[config]"+key+" load...");
+			try
 			{
-				@SuppressWarnings("unchecked")
-				MoneyMetadata moneyMeta = MoneyMetadata.deserialize((Map<String, Object>) moneyMetaMap);
-				
-				moneyMetaList.add(moneyMeta);
-			}
+				ConfigurationSection section = this.config.getConfigurationSection(key);
+				if(module.installData(section)) continue;
+			} catch(Exception e) {}
+			logger.log(Level.WARNING, "[config]"+key+" load fail");
 		}
-		catch(Exception e)
-		{
-			moneyMetaList = MoneyInfo.dftMoneyMetadataInfo;
-			this.plugin.getLogger().log(Level.WARNING, "moneymeta load error", e);
-			this.saveConfig();
-		}
-		this.moneyInfo = new MoneyInfo(moneyMetaList);
-		
+		this.saveConfig();
 	}
-	
-	public MoneyInfo getMoneyInfo()
-	{
-		return this.moneyInfo;
-	}
-	
+
 	@Override
 	public String toString()
 	{
 		StringBuffer strbuf = new StringBuffer();
-		strbuf.append("MoneyMetadata:\n");
-		for(MoneyMetadata moneyMeta : this.moneyInfo.moneyList)
+		for(String key : this.module.keySet())
 		{
-			strbuf.append("------\n"+moneyMeta+"\n");
+			ConfigurationMember module = this.module.get(key);
+			strbuf.append(key+":\n");
+			strbuf.append(module.toString()+"\n");
 		}
+		
 		return strbuf.toString();
 	}
 }

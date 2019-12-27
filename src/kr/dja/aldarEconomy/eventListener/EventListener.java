@@ -43,7 +43,7 @@ import org.bukkit.inventory.ItemStack;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 
 import kr.dja.aldarEconomy.EconomyUtil;
-import kr.dja.aldarEconomy.setting.MoneyMetadata;
+import kr.dja.aldarEconomy.coininfo.CoinMetadata;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
 import kr.dja.aldarEconomy.tracker.item.ItemTracker;
 
@@ -110,7 +110,7 @@ public class EventListener implements Listener
 		if(e.isCancelled()) return;
 		Item item = e.getEntity();
 		
-		MoneyMetadata money = this.checker.isMoney(item.getItemStack());
+		CoinMetadata money = this.checker.isMoney(item.getItemStack());
 		if(money == null) return;
 		
 		if(this.createCheck.contains(item))
@@ -142,7 +142,7 @@ public class EventListener implements Listener
 		if(!(e.getEntity() instanceof Item)) return;
 		Item item = (Item) e.getEntity();
 		ItemStack stack = item.getItemStack();
-		MoneyMetadata money = this.checker.isMoney(stack);
+		CoinMetadata money = this.checker.isMoney(stack);
 		if(money == null) return;
 		if(this.destroyCheck.contains(item))
 		{
@@ -159,7 +159,7 @@ public class EventListener implements Listener
 	{// 엔티티가 아이템을 먹었을 때
 		if(e.isCancelled()) return;
 		ItemStack stack = e.getItem().getItemStack();
-		MoneyMetadata money = this.checker.isMoney(stack);
+		CoinMetadata money = this.checker.isMoney(stack);
 		if(money == null) return;
 		if(e.getEntityType() != EntityType.PLAYER)
 		{
@@ -182,7 +182,7 @@ public class EventListener implements Listener
 		if(e.isCancelled()) return;
 		Item itemDrop = e.getItemDrop();
 		ItemStack stack = itemDrop.getItemStack();
-		MoneyMetadata money = this.checker.isMoney(stack);
+		CoinMetadata money = this.checker.isMoney(stack);
 		if(money == null) return;
 		this.createCheck.add(itemDrop);
 		Player p = e.getPlayer();
@@ -195,7 +195,7 @@ public class EventListener implements Listener
 	public void onInventoryPickupItem(InventoryPickupItemEvent e)
 	{// 호퍼나 마인카트가 아이템을 먹었을 때
 		if(e.isCancelled()) return;
-		MoneyMetadata money = this.checker.isMoney(e.getItem().getItemStack());
+		CoinMetadata money = this.checker.isMoney(e.getItem().getItemStack());
 		if(money == null) return;
 		e.setCancelled(true);
 		e.getItem().remove();//돈 삭제(돈 삭제 이벤트 호출됨)
@@ -207,7 +207,7 @@ public class EventListener implements Listener
 	{// 호퍼 아이템 이동
 		if(e.isCancelled()) return;
 		ItemStack item = e.getItem();
-		MoneyMetadata money = this.checker.isMoney(item);
+		CoinMetadata money = this.checker.isMoney(item);
 		if(money == null) return;
 		e.setCancelled(true);
 		InventoryHolder holder = e.getDestination().getHolder();
@@ -235,7 +235,7 @@ public class EventListener implements Listener
 	public void onPlayerEntityInteract(PlayerInteractEntityEvent e)
 	{// 플레이어엔티티인터렉트 액자와같은
 		if(e.isCancelled()) return;
-		MoneyMetadata money = this.checker.isMoney(e.getPlayer().getInventory().getItemInMainHand());
+		CoinMetadata money = this.checker.isMoney(e.getPlayer().getInventory().getItemInMainHand());
 		if(money == null) return;
 		e.setCancelled(true);
 	}
@@ -245,7 +245,7 @@ public class EventListener implements Listener
 	public void onItemMerge(ItemMergeEvent e)
 	{
 		if(e.isCancelled()) return;
-		MoneyMetadata money = this.checker.isMoney(e.getEntity().getItemStack());
+		CoinMetadata money = this.checker.isMoney(e.getEntity().getItemStack());
 		if(money == null) return;
 		this.destroyCheck.add(e.getEntity());
 		this.itemTracker.onMoneyMerge(e.getTarget(), e.getEntity());
@@ -259,8 +259,8 @@ public class EventListener implements Listener
 		//e.getInventory().getType() 연 인벤토리
 		//e.getClickedInventory().getType() 클릭한 인벤토리
 
-		MoneyMetadata currentMoney = this.checker.isMoney(e.getCurrentItem());
-		MoneyMetadata cursorMoeny = this.checker.isMoney(e.getCursor());
+		CoinMetadata currentMoney = this.checker.isMoney(e.getCurrentItem());
+		CoinMetadata cursorMoeny = this.checker.isMoney(e.getCursor());
 		if(currentMoney == null && cursorMoeny == null) return;
 		Inventory top = e.getView().getTopInventory();
 		Inventory clickedInv = e.getClickedInventory();
@@ -291,16 +291,14 @@ public class EventListener implements Listener
 	public void onInventoryDrag(InventoryDragEvent e)
 	{// 인벤토리드레그이벤트
 		if(e.isCancelled()) return;
-		MoneyMetadata cursorMoeny = this.checker.isMoney(e.getOldCursor());
+		CoinMetadata cursorMoeny = this.checker.isMoney(e.getOldCursor());
 		if(cursorMoeny == null) return;
-		StringBuffer buf = new StringBuffer();
 		Inventory top = e.getView().getTopInventory();
 		if(top != null && !this.checker.isAllowdInventory(top))
 		{
 			int topInvSize = top.getSize();
 			for(int slot : e.getRawSlots())
 			{
-				buf.append(slot+",");
 				if(topInvSize > slot)
 				{
 					e.setCancelled(true);
@@ -316,7 +314,7 @@ public class EventListener implements Listener
 		int dropMoney = 0;
 		for(ItemStack stack : e.getDrops())
 		{
-			MoneyMetadata money = this.checker.isMoney(stack);
+			CoinMetadata money = this.checker.isMoney(stack);
 			if(money == null) continue;
 			dropMoney += money.value * stack.getAmount();
 		}

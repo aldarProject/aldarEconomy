@@ -9,8 +9,8 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 
+import kr.dja.aldarEconomy.IntLocation;
 import kr.dja.aldarEconomy.dataObject.DependType;
-import kr.dja.aldarEconomy.dataObject.IntLocation;
 
 public class ChestEconomyStorage
 {

@@ -10,9 +10,10 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import kr.dja.aldarEconomy.IntLocation;
 import kr.dja.aldarEconomy.bank.TradeTracker;
+import kr.dja.aldarEconomy.coininfo.CoinInfo;
 import kr.dja.aldarEconomy.dataObject.DependType;
-import kr.dja.aldarEconomy.dataObject.IntLocation;
 import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
 import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
@@ -23,11 +24,10 @@ import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemWallet;
 import kr.dja.aldarEconomy.dataObject.player.PlayerEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.player.PlayerWallet;
-import kr.dja.aldarEconomy.setting.MoneyInfo;
 
 public class EconomyDataStorage
 {// dao
-	private final MoneyInfo moneyInfo;
+	private final CoinInfo moneyInfo;
 	private final Logger logger;
 	public final String dataGroupName;
 	
@@ -39,7 +39,7 @@ public class EconomyDataStorage
 	public final EnderChestEconomyStorage playerEnderChestEconomy;
 	public final ItemEconomyStorage itemEconomyStorage;
 	
-	public EconomyDataStorage(MoneyInfo moneyInfo, Logger logger, String dataGroupName)
+	public EconomyDataStorage(CoinInfo moneyInfo, Logger logger, String dataGroupName)
 	{
 		this.moneyInfo = moneyInfo;
 		this.logger = logger;
@@ -53,7 +53,7 @@ public class EconomyDataStorage
 		this.itemEconomyStorage = new ItemEconomyStorage(this::onModifyItemMoney);
 	}
 	
-	public long getPlayerMoney(UUID player)
+	public long getPlayerMoneyTotal(UUID player)
 	{
 		Player p = Bukkit.getPlayer(player);
 		if(p == null)

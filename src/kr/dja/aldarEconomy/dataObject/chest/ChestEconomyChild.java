@@ -9,8 +9,8 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 
+import kr.dja.aldarEconomy.IntLocation;
 import kr.dja.aldarEconomy.dataObject.DependType;
-import kr.dja.aldarEconomy.dataObject.IntLocation;
 
 
 public class ChestEconomyChild
@@ -77,6 +77,15 @@ public class ChestEconomyChild
 		ChestWallet wallet = this._eMap.get(key);
 		if(wallet == null) return 0;
 		return wallet.getMoney();
+	}
+	
+	public IntLocation getLocation()
+	{
+		for(IntLocation loc : this.parents)
+		{
+			return loc;
+		}
+		return null;
 	}
 	
 	@Override

@@ -1,29 +1,68 @@
 package kr.dja.aldarEconomy.api;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.function.Supplier;
 
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import kr.dja.aldarEconomy.AldarEconomy;
+import kr.dja.aldarEconomy.EconomyUtil;
+import kr.dja.aldarEconomy.api.token.APITokenManager;
+import kr.dja.aldarEconomy.api.token.SystemID;
+import kr.dja.aldarEconomy.bank.Bank;
+import kr.dja.aldarEconomy.data.EconomyDataStorage;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
+import net.milkbowl.vault.economy.EconomyResponse.ResponseType;
 
-public class VaultImplementation implements Economy
+public class VaultEconomyProvider implements Economy
 {
-
+	private static final String CAUSE_API_ACCESS = "valut_api_access";
+	
+	private final Plugin plugin;
+	private AldarEconomyProvider provider;
+	
+	private final BukkitScheduler scheduler;
+	
+	private boolean isEnable;
+	
+	private final SystemID valutToken;
+	
+	
+	public VaultEconomyProvider(APITokenManager tokenManager, Plugin plugin, AldarEconomyProvider provider)
+	{
+		this.valutToken = tokenManager.takeOrRegisterAPIToken("vault");
+		this.plugin = plugin;
+		this.provider = provider;
+		this.scheduler = Bukkit.getScheduler();
+	}
+	
+	public void setState(boolean state)
+	{
+		this.isEnable = state;
+	}
+	
 	 /**
      * Checks if economy method is enabled.
      * @return Success or Failure
      */
+	@Override
     public boolean isEnabled()
     {
-    	return true;
+    	return this.isEnable;
     }
 
     /**
      * Gets name of economy method
      * @return Name of Economy Method
      */
+	@Override
     public String getName()
     {
     	return AldarEconomy.PLUGIN_NAME;
@@ -33,6 +72,7 @@ public class VaultImplementation implements Economy
      * Returns true if the given implementation supports banks.
      * @return true if the implementation supports banks
      */
+	@Override
     public boolean hasBankSupport()
     {
     	return false;
@@ -44,6 +84,7 @@ public class VaultImplementation implements Economy
      * or -1 if no rounding occurs.
      * @return number of digits after the decimal point kept
      */
+	@Override
     public int fractionalDigits()
     {
     	return 1;
@@ -56,6 +97,7 @@ public class VaultImplementation implements Economy
      * @param amount to format
      * @return Human readable string describing amount
      */
+	@Override
     public String format(double amount)
     {
     	return Integer.toString((int)amount);
@@ -67,6 +109,7 @@ public class VaultImplementation implements Economy
      * 
      * @return name of the currency (plural)
      */
+	@Override
     public String currencyNamePlural()
     {
     	return "";
@@ -79,6 +122,7 @@ public class VaultImplementation implements Economy
      * 
      * @return name of the currency (singular)
      */
+	@Override
     public String currencyNameSingular()
     {
     	return "";
@@ -89,6 +133,7 @@ public class VaultImplementation implements Economy
      * @deprecated As of VaultAPI 1.4 use {@link #hasAccount(OfflinePlayer)} instead.
      */
     @Deprecated
+    @Override
     public boolean hasAccount(String playerName)
     {
     	return true;
@@ -102,6 +147,7 @@ public class VaultImplementation implements Economy
      * @param player to check
      * @return if the player has an account
      */
+    @Override
     public boolean hasAccount(OfflinePlayer player)
     {
     	return true;
@@ -111,6 +157,7 @@ public class VaultImplementation implements Economy
      * @deprecated As of VaultAPI 1.4 use {@link #hasAccount(OfflinePlayer, String)} instead.
      */
     @Deprecated
+    @Override
     public boolean hasAccount(String playerName, String worldName)
     {
     	return true;
@@ -125,6 +172,7 @@ public class VaultImplementation implements Economy
      * @param worldName world-specific account
      * @return if the player has an account
      */
+    @Override
     public boolean hasAccount(OfflinePlayer player, String worldName)
     {
     	return true;
@@ -134,11 +182,12 @@ public class VaultImplementation implements Economy
      * @deprecated As of VaultAPI 1.4 use {@link #getBalance(OfflinePlayer)} instead.
      */
     @Deprecated
+    @Override
     public double getBalance(String playerName)
     {
-    	return 0;
+    	OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
+    	return this.getBalance(player);
     }
-    
     /**
      * Gets balance of a player
      * 
@@ -147,7 +196,7 @@ public class VaultImplementation implements Economy
      */
     public double getBalance(OfflinePlayer player)
     {
-    	return 0;
+    	return this.provider.getPlayerInventoryMoney(player);
     }
 
     /**
@@ -156,7 +205,7 @@ public class VaultImplementation implements Economy
     @Deprecated
     public double getBalance(String playerName, String world)
     {
-    	return 0;
+    	return this.getBalance(playerName);
     }
     
     /**
@@ -168,7 +217,7 @@ public class VaultImplementation implements Economy
      */
     public double getBalance(OfflinePlayer player, String world)
     {
-    	return 0;
+    	return this.getBalance(player);
     }
     
     /**
@@ -177,9 +226,10 @@ public class VaultImplementation implements Economy
     @Deprecated
     public boolean has(String playerName, double amount)
     {
-    	return false;
+    	OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
+    	return this.has(player, amount);
     }
-    
+
     /**
      * Checks if the player account has the amount - DO NOT USE NEGATIVE AMOUNTS
      * 
@@ -189,16 +239,18 @@ public class VaultImplementation implements Economy
      */
     public boolean has(OfflinePlayer player, double amount)
     {
+    	int playerAmount = this.provider.getPlayerInventoryMoney(player);
+    	if(amount <= playerAmount) return true;
     	return false;
     }
-
+    
     /**
      * @deprecated As of VaultAPI 1.4 use @{link {@link #has(OfflinePlayer, String, double)} instead.
      */
     @Deprecated
     public boolean has(String playerName, String worldName, double amount)
     {
-    	return false;
+    	return this.has(playerName, amount);
     }
     
     /**
@@ -212,7 +264,7 @@ public class VaultImplementation implements Economy
      */
     public boolean has(OfflinePlayer player, String worldName, double amount)
     {
-    	return false;
+    	return this.has(player, amount);
     }
 
     /**
@@ -221,9 +273,10 @@ public class VaultImplementation implements Economy
     @Deprecated
     public EconomyResponse withdrawPlayer(String playerName, double amount)
     {
-    	return null;
+    	OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
+    	return this.withdrawPlayer(player, amount);
     }
-
+    
     /**
      * Withdraw an amount from a player - DO NOT USE NEGATIVE AMOUNTS
      * 
@@ -231,9 +284,20 @@ public class VaultImplementation implements Economy
      * @param amount Amount to withdraw
      * @return Detailed response of transaction
      */
-    public EconomyResponse withdrawPlayer(OfflinePlayer player, double amount)
+    public EconomyResponse withdrawPlayer(OfflinePlayer op, double amount)
     {
-    	return null;
+    	if(!this.isEnable) return new EconomyResponse(0, 0, ResponseType.FAILURE, null);
+    	if(op == null) return new EconomyResponse(0, 0, ResponseType.FAILURE, null);
+    	HumanEntity player = Bukkit.getPlayer(op.getUniqueId());
+    	int intAmount = (int)amount;
+    	EconomyResult result = this.provider.withdrawPlayer(player, intAmount, this.valutToken, CAUSE_API_ACCESS, "withdrawPlayer");
+    	if(result == EconomyResult.OK)
+    	{
+    		int playerMoney = this.provider.getPlayerInventoryMoney(op);
+    		return new EconomyResponse(-intAmount, playerMoney, ResponseType.SUCCESS, null);
+    	}
+
+    	return new EconomyResponse(0, 0, ResponseType.FAILURE, result.toString());
     }
 
     /**
@@ -242,7 +306,8 @@ public class VaultImplementation implements Economy
     @Deprecated
     public EconomyResponse withdrawPlayer(String playerName, String worldName, double amount)
     {
-    	return null;
+    	OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
+    	return this.withdrawPlayer(player, amount);
     }
     
     /**
@@ -255,7 +320,7 @@ public class VaultImplementation implements Economy
      */
     public EconomyResponse withdrawPlayer(OfflinePlayer player, String worldName, double amount)
     {
-    	return null;
+    	return this.withdrawPlayer(player, amount);
     }
 
     /**
@@ -264,7 +329,8 @@ public class VaultImplementation implements Economy
     @Deprecated
     public EconomyResponse depositPlayer(String playerName, double amount)
     {
-    	return null;
+    	OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
+    	return this.depositPlayer(player, amount);
     }
 
     /**
@@ -274,9 +340,20 @@ public class VaultImplementation implements Economy
      * @param amount Amount to deposit
      * @return Detailed response of transaction
      */
-    public EconomyResponse depositPlayer(OfflinePlayer player, double amount)
+    public EconomyResponse depositPlayer(OfflinePlayer op, double amount)
     {
-    	return null;
+    	if(!this.isEnable) return new EconomyResponse(0, 0, ResponseType.FAILURE, null);
+    	if(op == null) return new EconomyResponse(0, 0, ResponseType.FAILURE, null);
+    	HumanEntity player = Bukkit.getPlayer(op.getUniqueId());
+    	int intAmount = (int)amount;
+    	EconomyResult result = this.provider.depositPlayer(player, intAmount, this.valutToken, CAUSE_API_ACCESS, "depositPlayer");
+    	if(result == EconomyResult.OK)
+    	{
+    		int playerMoney = this.provider.getPlayerInventoryMoney(op);
+    		return new EconomyResponse(intAmount, playerMoney, ResponseType.SUCCESS, null);
+    	}
+
+    	return new EconomyResponse(0, 0, ResponseType.FAILURE, result.toString());
     }
 
     /**
@@ -285,7 +362,8 @@ public class VaultImplementation implements Economy
     @Deprecated
     public EconomyResponse depositPlayer(String playerName, String worldName, double amount)
     {
-    	return null;
+    	OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
+    	return this.depositPlayer(player, amount);
     }
    
     /**
@@ -299,7 +377,7 @@ public class VaultImplementation implements Economy
      */
     public EconomyResponse depositPlayer(OfflinePlayer player, String worldName, double amount)
     {
-    	return null;
+    	return this.depositPlayer(player, amount);
     }
 
     /**
@@ -308,7 +386,8 @@ public class VaultImplementation implements Economy
     @Deprecated
     public EconomyResponse createBank(String name, String player)
     {
-    	return null;
+    	OfflinePlayer op = Bukkit.getOfflinePlayer(player);
+    	return this.createBank(name, op);
     }
 
     /**
@@ -319,7 +398,7 @@ public class VaultImplementation implements Economy
      */
     public EconomyResponse createBank(String name, OfflinePlayer player)
     {
-    	return null;
+    	return new EconomyResponse(0, 0, ResponseType.NOT_IMPLEMENTED, null);
     }
 
     /**
@@ -329,7 +408,7 @@ public class VaultImplementation implements Economy
      */
     public EconomyResponse deleteBank(String name)
     {
-    	return null;
+    	return new EconomyResponse(0, 0, ResponseType.NOT_IMPLEMENTED, null);
     }
 
     /**
@@ -339,7 +418,7 @@ public class VaultImplementation implements Economy
      */
     public EconomyResponse bankBalance(String name)
     {
-    	return null;
+    	return new EconomyResponse(0, 0, ResponseType.NOT_IMPLEMENTED, null);
     }
 
     /**
@@ -351,7 +430,7 @@ public class VaultImplementation implements Economy
      */
     public EconomyResponse bankHas(String name, double amount)
     {
-    	return null;
+    	return new EconomyResponse(0, 0, ResponseType.NOT_IMPLEMENTED, null);
     }
 
     /**
@@ -363,7 +442,7 @@ public class VaultImplementation implements Economy
      */
     public EconomyResponse bankWithdraw(String name, double amount)
     {
-    	return null;
+    	return new EconomyResponse(0, 0, ResponseType.NOT_IMPLEMENTED, null);
     }
 
     /**
@@ -375,7 +454,7 @@ public class VaultImplementation implements Economy
      */
     public EconomyResponse bankDeposit(String name, double amount)
     {
-    	return null;
+    	return new EconomyResponse(0, 0, ResponseType.NOT_IMPLEMENTED, null);
     }
     
     /**
@@ -384,7 +463,8 @@ public class VaultImplementation implements Economy
     @Deprecated
     public EconomyResponse isBankOwner(String name, String playerName)
     {
-    	return null;
+    	OfflinePlayer op = Bukkit.getOfflinePlayer(playerName);
+    	return this.isBankOwner(name, op);
     }
     
     /**
@@ -396,7 +476,7 @@ public class VaultImplementation implements Economy
      */
     public EconomyResponse isBankOwner(String name, OfflinePlayer player)
     {
-    	return null;
+    	return new EconomyResponse(0, 0, ResponseType.NOT_IMPLEMENTED, null);
     }
 
     /**
@@ -405,7 +485,8 @@ public class VaultImplementation implements Economy
     @Deprecated
     public EconomyResponse isBankMember(String name, String playerName)
     {
-    	return null;
+    	OfflinePlayer op = Bukkit.getOfflinePlayer(playerName);
+    	return this.isBankMember(name, op);
     }
     
     /**
@@ -417,7 +498,7 @@ public class VaultImplementation implements Economy
      */
     public EconomyResponse isBankMember(String name, OfflinePlayer player)
     {
-    	return null;
+    	return new EconomyResponse(0, 0, ResponseType.NOT_IMPLEMENTED, null);
     }
 
     /**
@@ -468,4 +549,5 @@ public class VaultImplementation implements Economy
     {
     	return true;
     }
+    
 }

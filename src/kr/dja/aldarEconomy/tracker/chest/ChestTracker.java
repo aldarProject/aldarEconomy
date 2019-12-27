@@ -25,11 +25,11 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
 
 import kr.dja.aldarEconomy.EconomyUtil;
-import kr.dja.aldarEconomy.api.APITokenManager;
-import kr.dja.aldarEconomy.api.SystemID;
+import kr.dja.aldarEconomy.IntLocation;
+import kr.dja.aldarEconomy.api.token.APITokenManager;
+import kr.dja.aldarEconomy.api.token.SystemID;
 import kr.dja.aldarEconomy.bank.TradeTracker;
 import kr.dja.aldarEconomy.dataObject.DependType;
-import kr.dja.aldarEconomy.dataObject.IntLocation;
 import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
 import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;

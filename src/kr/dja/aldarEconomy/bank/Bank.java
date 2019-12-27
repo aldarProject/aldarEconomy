@@ -17,13 +17,13 @@ import org.bukkit.inventory.ItemStack;
 import com.bergerkiller.bukkit.common.utils.ItemUtil;
 
 import kr.dja.aldarEconomy.EconomyUtil;
-import kr.dja.aldarEconomy.api.APITokenManager;
-import kr.dja.aldarEconomy.api.SystemID;
+import kr.dja.aldarEconomy.IntLocation;
+import kr.dja.aldarEconomy.api.token.APITokenManager;
+import kr.dja.aldarEconomy.api.token.SystemID;
+import kr.dja.aldarEconomy.coininfo.CoinInfo;
+import kr.dja.aldarEconomy.coininfo.CoinMetadata;
 import kr.dja.aldarEconomy.data.EconomyDataStorage;
 import kr.dja.aldarEconomy.dataObject.DependType;
-import kr.dja.aldarEconomy.dataObject.IntLocation;
-import kr.dja.aldarEconomy.setting.MoneyInfo;
-import kr.dja.aldarEconomy.setting.MoneyMetadata;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
 
 public class Bank
@@ -32,14 +32,14 @@ public class Bank
 	public static final int MAX_PLAYER_INVENTORY_SIZE = 36;
 	
 	private final double ITEM_DIST = 0.5;
-	private final MoneyInfo info;
+	private final CoinInfo info;
 	private final EconomyUtil util;
 	private final EconomyDataStorage dataStorage;
 	private final ChestTracker chestTracker;
 	private final TradeTracker tradeTracker;
 	private final int[] coinMaxStackSize;
 	
-	public Bank(MoneyInfo info, EconomyUtil util, EconomyDataStorage dataStorage, ChestTracker chestTracker, TradeTracker tradeTracker)
+	public Bank(CoinInfo info, EconomyUtil util, EconomyDataStorage dataStorage, ChestTracker chestTracker, TradeTracker tradeTracker)
 	{
 		this.info = info;
 		this.util = util;
@@ -53,7 +53,7 @@ public class Bank
 		}
 	}
 	
-	public BankActionResult issuanceToPlayer(SystemID id, HumanEntity player, int amount, String cause, String args)
+	public EconomyActionResult issuanceToPlayer(SystemID id, HumanEntity player, int amount, String cause, String args)
 	{
 		int[] invMoneyTypeCountArr = new int[this.info.count];
 		int[] needMoneyTypeArr = new int[this.info.count];
@@ -64,12 +64,12 @@ public class Bank
 		this.initInventoryEconomyMap(invMoneyTypeCountArr, invContents, infoArr);
 		if(this.getIncreaseMoneyInfo(amount, needMoneyTypeArr) != 0)
 		{// 지불할 소액권 없음.
-			return BankActionResult.unitTooSmall;
+			return EconomyActionResult.unitTooSmall;
 		}
 		
 		if(this.issuanceReadyTask(needMoneyTypeArr, infoArr, MAX_PLAYER_INVENTORY_SIZE) != 0)
 		{
-			return BankActionResult.insufficientSpace;
+			return EconomyActionResult.insufficientSpace;
 		}
 		
 		UUID playerUID = player.getUniqueId();
@@ -79,10 +79,10 @@ public class Bank
 		this.tradeTracker.normalIssuance(id, amount, intLoc, cause, args);
 		this.dataStorage.playerDependEconomy.increaseEconomy(playerUID, amount);
 		
-		return BankActionResult.OK;
+		return EconomyActionResult.OK;
 	}
 	
-	public BankActionResult consumeFromPlayer(SystemID id, HumanEntity player, int amount, String cause, String args)
+	public EconomyActionResult consumeFromPlayer(SystemID id, HumanEntity player, int amount, String cause, String args)
 	{
 		int[] invMoneyTypeCountArr = new int[this.info.count];
 		int[] needMoneyTypeArr = new int[this.info.count];
@@ -94,19 +94,19 @@ public class Bank
 		int invMoney = this.initInventoryEconomyMap(invMoneyTypeCountArr, invContents, infoArr);
 		if(invMoney < amount)
 		{//돈부족
-			return BankActionResult.insufficientMoney;
+			return EconomyActionResult.insufficientMoney;
 		}
 
 		if(this.getDecreaseMoneyInfo(amount, invMoneyTypeCountArr, needMoneyTypeArr) != 0)
 		{// 지불할 소액권 없음.
-			return BankActionResult.unitTooSmall;
+			return EconomyActionResult.unitTooSmall;
 		}
 			
 		this.consumeReadyTask(needMoneyTypeArr, infoArr);
 		
 		if(this.issuanceReadyTask(needMoneyTypeArr, infoArr, MAX_PLAYER_INVENTORY_SIZE) != 0)
 		{
-			return BankActionResult.insufficientSpace;
+			return EconomyActionResult.insufficientSpace;
 		}
 		
 		IntLocation intLoc = new IntLocation(player.getLocation());
@@ -120,15 +120,15 @@ public class Bank
 		this.modifyInventory(playerInv, infoArr);
 		this.dataStorage.playerDependEconomy.decreaseEconomy(playerUID, amount);
 		this.tradeTracker.normalConsume(id,playerUID,DependType.PLAYER, amount, intLoc, cause, args);
-		return BankActionResult.OK;
+		return EconomyActionResult.OK;
 	}
 	
-	public BankActionResult issuanceToItem(SystemID id, Location loc, int amount, String cause, String args)
+	public EconomyActionResult issuanceToItem(SystemID id, Location loc, int amount, String cause, String args)
 	{
 		World w = loc.getWorld();
 		
 		ItemStack[] moneyItemArr = this.getMoneyItemStack(amount);
-		if(moneyItemArr == null) return BankActionResult.unitTooSmall;
+		if(moneyItemArr == null) return EconomyActionResult.unitTooSmall;
 
 		int sqSide = (int)Math.ceil(Math.sqrt(moneyItemArr.length));
 		double offset = (sqSide * ITEM_DIST) / 2.0;
@@ -149,10 +149,10 @@ public class Bank
 			}
 		}
 		this.tradeTracker.normalIssuance(id, amount, new IntLocation(loc), cause, args);
-		return BankActionResult.OK;
+		return EconomyActionResult.OK;
 	}
 	
-	public BankActionResult issuanceToChest(SystemID id, Inventory chestInv, int amount, String cause, String args)
+	public EconomyActionResult issuanceToChest(SystemID id, Inventory chestInv, int amount, String cause, String args)
 	{
 		int[] invMoneyTypeCountArr = new int[this.info.count];
 		int[] needMoneyTypeArr = new int[this.info.count];
@@ -163,12 +163,12 @@ public class Bank
 		
 		if(this.getIncreaseMoneyInfo(amount, needMoneyTypeArr) != 0)
 		{// 지불할 소액권 없음.
-			return BankActionResult.unitTooSmall;
+			return EconomyActionResult.unitTooSmall;
 		}
 		
 		if(this.issuanceReadyTask(needMoneyTypeArr, infoArr, -1) != 0)
 		{
-			return BankActionResult.insufficientSpace;
+			return EconomyActionResult.insufficientSpace;
 		}
 		
 		IntLocation intLoc = new IntLocation(chestInv.getLocation());
@@ -177,10 +177,10 @@ public class Bank
 		this.chestTracker.onIssuanceToChest(id, chestInv, amount);
 		this.tradeTracker.normalIssuance(id, amount, intLoc, cause, args);
 		
-		return BankActionResult.OK;
+		return EconomyActionResult.OK;
 	}
 	
-	public BankActionResult consumeFromChest(SystemID id, Inventory chestInv, int amount, String cause, String args)
+	public EconomyActionResult consumeFromChest(SystemID id, Inventory chestInv, int amount, String cause, String args)
 	{
 		int[] invMoneyTypeCountArr = new int[this.info.count];
 		int[] needMoneyTypeArr = new int[this.info.count];
@@ -189,28 +189,28 @@ public class Bank
 		ModifyInventoryInfo[] cInfoArr = new ModifyInventoryInfo[cInvContents.length];
 		if(this.initInventoryEconomyMap(invMoneyTypeCountArr, cInvContents, cInfoArr) < amount)
 		{//돈부족
-			return BankActionResult.insufficientMoney;
+			return EconomyActionResult.insufficientMoney;
 		}
 
 		if(this.getDecreaseMoneyInfo(amount, invMoneyTypeCountArr, needMoneyTypeArr) != 0)
 		{// 지불할 소액권 없음.
-			return BankActionResult.unitTooSmall;
+			return EconomyActionResult.unitTooSmall;
 		}
 			
 		this.consumeReadyTask(needMoneyTypeArr, cInfoArr);
 		
 		if(this.issuanceReadyTask(needMoneyTypeArr, cInfoArr, -1) != 0)
 		{
-			return BankActionResult.insufficientSpace;
+			return EconomyActionResult.insufficientSpace;
 		}
 		this.modifyInventory(chestInv, cInfoArr);
 		
 		this.chestTracker.onConsumeFromChest(chestInv, amount, id, cause, args);
 		
-		return BankActionResult.OK;
+		return EconomyActionResult.OK;
 	}
 	
-	public BankActionResult movePlayerMoneyToPlayer(HumanEntity source, HumanEntity target, int amount, String cause, String args)
+	public EconomyActionResult movePlayerMoneyToPlayer(HumanEntity source, HumanEntity target, int amount, String cause, String args)
 	{
 		int[] invMoneyTypeCountArr = new int[this.info.count];
 		int[] needMoneyTypeArr = new int[this.info.count];
@@ -222,19 +222,19 @@ public class Bank
 		int sourceInvMoney = this.initInventoryEconomyMap(invMoneyTypeCountArr, sInvContents, sInfoArr);
 		if(sourceInvMoney < amount)
 		{//돈부족
-			return BankActionResult.insufficientMoney;
+			return EconomyActionResult.insufficientMoney;
 		}
 
 		if(this.getDecreaseMoneyInfo(amount, invMoneyTypeCountArr, needMoneyTypeArr) != 0)
 		{// 지불할 소액권 없음.
-			return BankActionResult.unitTooSmall;
+			return EconomyActionResult.unitTooSmall;
 		}
 			
 		this.consumeReadyTask(needMoneyTypeArr, sInfoArr);
 		
 		if(this.issuanceReadyTask(needMoneyTypeArr, sInfoArr, MAX_PLAYER_INVENTORY_SIZE) != 0)
 		{
-			return BankActionResult.insufficientSpace;
+			return EconomyActionResult.insufficientSpace;
 		}
 		
 		for(int i = 0; i < this.info.count; ++i)
@@ -250,12 +250,12 @@ public class Bank
 		this.initInventoryEconomyMap(invMoneyTypeCountArr, tInvContents, tInfoArr);
 		if(this.getIncreaseMoneyInfo(amount, needMoneyTypeArr) != 0)
 		{// 지불할 소액권 없음.
-			return BankActionResult.unitTooSmall;
+			return EconomyActionResult.unitTooSmall;
 		}
 		
 		if(this.issuanceReadyTask(needMoneyTypeArr, tInfoArr, MAX_PLAYER_INVENTORY_SIZE) != 0)
 		{
-			return BankActionResult.insufficientSpace;
+			return EconomyActionResult.insufficientSpace;
 		}
 		
 		UUID sourceUID = source.getUniqueId();
@@ -274,10 +274,10 @@ public class Bank
 		this.dataStorage.playerDependEconomy.increaseEconomy(targetUID, amount);
 		this.tradeTracker.tradeLog(sourceUID, DependType.PLAYER, targetUID, DependType.PLAYER, amount, intLoc, cause, args);
 		
-		return BankActionResult.OK;
+		return EconomyActionResult.OK;
 	}
 	
-	public BankActionResult moveChestMoneyToPlayer(Inventory chestInv, HumanEntity player, int amount)
+	public EconomyActionResult moveChestMoneyToPlayer(Inventory chestInv, HumanEntity player, int amount)
 	{
 		int[] invMoneyTypeCountArr = new int[this.info.count];
 		int[] needMoneyTypeArr = new int[this.info.count];
@@ -286,19 +286,19 @@ public class Bank
 		ModifyInventoryInfo[] cInfoArr = new ModifyInventoryInfo[cInvContents.length];
 		if(this.initInventoryEconomyMap(invMoneyTypeCountArr, cInvContents, cInfoArr) < amount)
 		{//돈부족
-			return BankActionResult.insufficientMoney;
+			return EconomyActionResult.insufficientMoney;
 		}
 
 		if(this.getDecreaseMoneyInfo(amount, invMoneyTypeCountArr, needMoneyTypeArr) != 0)
 		{// 지불할 소액권 없음.
-			return BankActionResult.unitTooSmall;
+			return EconomyActionResult.unitTooSmall;
 		}
 			
 		this.consumeReadyTask(needMoneyTypeArr, cInfoArr);
 		
 		if(this.issuanceReadyTask(needMoneyTypeArr, cInfoArr, -1) != 0)
 		{
-			return BankActionResult.insufficientSpace;
+			return EconomyActionResult.insufficientSpace;
 		}
 		
 		for(int i = 0; i < this.info.count; ++i)
@@ -313,22 +313,22 @@ public class Bank
 		this.initInventoryEconomyMap(invMoneyTypeCountArr, pInvContents, pInfoArr);
 		if(this.getIncreaseMoneyInfo(amount, needMoneyTypeArr) != 0)
 		{// 지불할 소액권 없음.
-			return BankActionResult.unitTooSmall;
+			return EconomyActionResult.unitTooSmall;
 		}
 		
 		if(this.issuanceReadyTask(needMoneyTypeArr, pInfoArr, MAX_PLAYER_INVENTORY_SIZE) != 0)
 		{
-			return BankActionResult.insufficientSpace;
+			return EconomyActionResult.insufficientSpace;
 		}
 		
 		this.modifyInventory(chestInv, cInfoArr);
 		this.modifyInventory(playerInv, pInfoArr);
 		
 		this.chestTracker.onChestMoneyToPlayer(chestInv, player, amount);
-		return BankActionResult.OK;
+		return EconomyActionResult.OK;
 	}
 	
-	public BankActionResult movePlayerMoneyToChest(HumanEntity player, Inventory chestInv, int amount)
+	public EconomyActionResult movePlayerMoneyToChest(HumanEntity player, Inventory chestInv, int amount)
 	{
 		int[] invMoneyTypeCountArr = new int[this.info.count];
 		int[] needMoneyTypeArr = new int[this.info.count];
@@ -338,19 +338,19 @@ public class Bank
 		ModifyInventoryInfo[] pInfoArr = new ModifyInventoryInfo[pInvContents.length];
 		if(this.initInventoryEconomyMap(invMoneyTypeCountArr, pInvContents, pInfoArr) < amount)
 		{//돈부족
-			return BankActionResult.insufficientMoney;
+			return EconomyActionResult.insufficientMoney;
 		}
 
 		if(this.getDecreaseMoneyInfo(amount, invMoneyTypeCountArr, needMoneyTypeArr) != 0)
 		{// 지불할 소액권 없음.
-			return BankActionResult.unitTooSmall;
+			return EconomyActionResult.unitTooSmall;
 		}
 			
 		this.consumeReadyTask(needMoneyTypeArr, pInfoArr);
 		
 		if(this.issuanceReadyTask(needMoneyTypeArr, pInfoArr, MAX_PLAYER_INVENTORY_SIZE) != 0)
 		{
-			return BankActionResult.insufficientSpace;
+			return EconomyActionResult.insufficientSpace;
 		}
 		
 		for(int i = 0; i < this.info.count; ++i)
@@ -365,19 +365,19 @@ public class Bank
 		this.initInventoryEconomyMap(invMoneyTypeCountArr, cInvContents, cInfoArr);
 		if(this.getIncreaseMoneyInfo(amount, needMoneyTypeArr) != 0)
 		{// 지불할 소액권 없음.
-			return BankActionResult.unitTooSmall;
+			return EconomyActionResult.unitTooSmall;
 		}
 		
 		if(this.issuanceReadyTask(needMoneyTypeArr, cInfoArr, -1) != 0)
 		{
-			return BankActionResult.insufficientSpace;
+			return EconomyActionResult.insufficientSpace;
 		}
 		
 		this.modifyInventory(playerInv, pInfoArr);
 		this.modifyInventory(chestInv, cInfoArr);
 		
 		this.chestTracker.onPlayerMoneyToChest(player, chestInv, amount);
-		return BankActionResult.OK;
+		return EconomyActionResult.OK;
 	}
 	
 	private int initInventoryEconomyMap(int[] invMoneyTypeCountArr, ItemStack[] invContents, ModifyInventoryInfo[] infoArr)
@@ -395,7 +395,7 @@ public class Bank
 				int invContentAmount = stack.getAmount();
 				for(int j = 0; j < this.info.count; ++j)
 				{
-					MoneyMetadata coinInfo = this.info.moneyList.get(j);
+					CoinMetadata coinInfo = this.info.moneyList.get(j);
 					if(coinInfo.itemStack.isSimilar(invContents[i]))
 					{
 						invMoneyTypeCountArr[j]+=invContentAmount;
@@ -416,7 +416,7 @@ public class Bank
 		int leftMoney = amount;
 		for(int i = 0; i < this.info.count; ++i)
 		{// 각 동전이 얼마나 필요한지 계산.
-			MoneyMetadata coinInfo = this.info.moneyList.get(i);
+			CoinMetadata coinInfo = this.info.moneyList.get(i);
 			int m = invMoneyTypeCountArr[i] * coinInfo.value;
 			
 			if(m >= leftMoney)
@@ -431,7 +431,7 @@ public class Bank
 					//Bukkit.broadcastMessage("change:" + change);
 					for(int j = i - 1; j >= 0; --j)
 					{
-						MoneyMetadata changeCoinInfo = this.info.moneyList.get(j);
+						CoinMetadata changeCoinInfo = this.info.moneyList.get(j);
 						
 						needMoneyTypeArr[j] -= (change / changeCoinInfo.value);
 						change = change % changeCoinInfo.value;
@@ -573,7 +573,7 @@ public class Bank
 				}
 				else
 				{
-					MoneyMetadata meta = this.info.moneyList.get(info.actionMeta);
+					CoinMetadata meta = this.info.moneyList.get(info.actionMeta);
 					if(meta.itemStack.isSimilar(invItem))
 					{
 						if(invItem.getAmount() != info.actionModify)
@@ -600,7 +600,7 @@ public class Bank
 		
 		for(int i = this.info.moneyList.size() - 1; i >= 0; --i)
 		{
-			MoneyMetadata meta = this.info.moneyList.get(i);
+			CoinMetadata meta = this.info.moneyList.get(i);
 			coinCntArr[i] = amount / meta.value;
 			amount = amount % meta.value;
 		}
@@ -608,7 +608,7 @@ public class Bank
 		List<ItemStack> moneyItemList = new ArrayList<>();
 		for(int i = 0; i < this.info.moneyList.size(); ++i)
 		{
-			MoneyMetadata meta = this.info.moneyList.get(i);
+			CoinMetadata meta = this.info.moneyList.get(i);
 			int itemStackCnt = coinCntArr[i]/meta.maxStack;
 			int itemStackRem = coinCntArr[i]%meta.maxStack;
 			for(int j = 0; j < itemStackCnt; ++j)

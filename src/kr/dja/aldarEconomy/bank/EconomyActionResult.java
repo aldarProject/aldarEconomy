@@ -1,6 +1,6 @@
 package kr.dja.aldarEconomy.bank;
 
-public enum BankActionResult
+public enum EconomyActionResult
 {
 	insufficientSpace,// 인벤토리 공간부족
 	insufficientMoney,// 인벤토리에 충분한 돈이 있지 않음

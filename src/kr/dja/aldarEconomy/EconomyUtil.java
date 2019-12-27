@@ -2,25 +2,26 @@ package kr.dja.aldarEconomy;
 
 
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import kr.dja.aldarEconomy.setting.MoneyInfo;
-import kr.dja.aldarEconomy.setting.MoneyMetadata;
+import kr.dja.aldarEconomy.coininfo.CoinInfo;
+import kr.dja.aldarEconomy.coininfo.CoinMetadata;
 
 public class EconomyUtil
 {
-	private final MoneyInfo moneyInfo;
+	private final CoinInfo moneyInfo;
 
-	public EconomyUtil(MoneyInfo moneyInfo)
+	public EconomyUtil(CoinInfo moneyInfo)
 	{
 		this.moneyInfo = moneyInfo;
 	}
 	
-	public MoneyMetadata isMoney(ItemStack itemStack)
+	public CoinMetadata isMoney(ItemStack itemStack)
 	{
 		if(itemStack == null) return null;
-		for(MoneyMetadata coin : this.moneyInfo.moneyList)
+		for(CoinMetadata coin : this.moneyInfo.moneyList)
 		{	
 			if(itemStack.isSimilar(coin.itemStack))
 			{
@@ -30,9 +31,9 @@ public class EconomyUtil
 		return null;
 	}
 	
-	public MoneyMetadata getMoneyMeta(ItemStack stack)
+	public CoinMetadata getMoneyMeta(ItemStack stack)
 	{
-		for(MoneyMetadata meta : this.moneyInfo.moneyList)
+		for(CoinMetadata meta : this.moneyInfo.moneyList)
 		{
 			if(meta.itemStack.isSimilar(stack))
 			{
@@ -44,7 +45,7 @@ public class EconomyUtil
 	
 	public int getValue(ItemStack stack)
 	{
-		MoneyMetadata meta = this.isMoney(stack);
+		CoinMetadata meta = this.isMoney(stack);
 		if(meta == null) return 0;
 		return meta.value * stack.getAmount();
 	}
@@ -84,12 +85,24 @@ public class EconomyUtil
 		return true;
 	}
 	
+	public boolean isSystemModifiableChest(Inventory inv)
+	{
+		if(this.isAllowdInventory(inv))
+		{
+			if(inv.getType() != InventoryType.ENDER_CHEST)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public int getInventoryMoney(Inventory inv)
 	{
 		int sum = 0;
 		for(ItemStack stack : inv.getContents())
 		{
-			MoneyMetadata moneyInfo = this.isMoney(stack);
+			CoinMetadata moneyInfo = this.isMoney(stack);
 			if(moneyInfo == null) continue;
 			sum += moneyInfo.value * stack.getAmount();
 		}
@@ -101,7 +114,7 @@ public class EconomyUtil
 	{
 		int sum = this.getInventoryMoney(p.getInventory());
 		ItemStack cursorStack = p.getItemOnCursor();
-		MoneyMetadata moneyMeta = this.isMoney(cursorStack);
+		CoinMetadata moneyMeta = this.isMoney(cursorStack);
 		if(moneyMeta != null)
 		{
 			sum += moneyMeta.value * cursorStack.getAmount();

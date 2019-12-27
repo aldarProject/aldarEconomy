@@ -50,6 +50,9 @@ public class CommandManager
 		cmd = this.plugin.getCommand(EconomyBankCmd.ADMIN_MOVE_PLAYER_TO_CHEST);
 		cmd.setExecutor(this.bankCmd);
 		cmd.setTabCompleter(this.bankCmd);
+		cmd = this.plugin.getCommand(EconomyBankCmd.ADMIN_MOVE_PLAYER_TO_PLAYER);
+		cmd.setExecutor(this.bankCmd);
+		cmd.setTabCompleter(this.bankCmd);
 	}
 
 }
