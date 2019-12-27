@@ -1,8 +1,5 @@
 package kr.dja.aldarEconomy.api;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
@@ -11,22 +8,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Container;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import kr.dja.aldarEconomy.EconomyUtil;
-import kr.dja.aldarEconomy.IntLocation;
 import kr.dja.aldarEconomy.api.token.SystemID;
 import kr.dja.aldarEconomy.bank.Bank;
 import kr.dja.aldarEconomy.bank.EconomyActionResult;
 import kr.dja.aldarEconomy.data.EconomyDataStorage;
-import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
-import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
-import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyChild;
-import kr.dja.aldarEconomy.dataObject.itemEntity.ItemWallet;
+import kr.dja.aldarEconomy.data.MoneyDetailResult;
 
 public class AldarEconomyProvider implements AldarEconomy
 {
@@ -66,33 +58,7 @@ public class AldarEconomyProvider implements AldarEconomy
 	public MoneyDetailResult getPlayerMoneyDetail(OfflinePlayer player)
 	{
 		if(player == null) return null;
-		UUID id = player.getUniqueId();
-		long playerTotal = this.storage.getPlayerMoneyTotal(id);
-		int playerInvMoney = this.storage.playerDependEconomy.getMoney(id);
-		int chestMoney = 0;
-		int itemMoney = 0;
-		Map<IntLocation, Integer> chestMoneyMap = new HashMap<>();
-		for(ChestEconomyChild child : this.storage.chestDependEconomy.childSet)
-		{
-			ChestWallet w = child.eMap.get(id);
-			if(w == null) continue;
-			IntLocation intLoc = child.getLocation();
-			chestMoneyMap.put(intLoc, w.getMoney());
-			chestMoney += w.getMoney();
-		}
-		Map<IntLocation, Integer> itemMoneyMap = new HashMap<>();
-		for(ItemEconomyChild child : this.storage.itemEconomyStorage.eMap.values())
-		{
-			ItemWallet w = child.eMap.get(id);
-			if(w == null) continue;
-			Entity entity = Bukkit.getEntity(child.parent);
-			IntLocation intLoc = new IntLocation(entity.getLocation());
-			int mapMoney = itemMoneyMap.getOrDefault(intLoc, 0);
-			itemMoneyMap.put(intLoc, mapMoney + w.getMoney());
-			itemMoney += w.getMoney();
-		}
-		int enderChestMoney = this.storage.playerEnderChestEconomy.getMoney(id);
-		return new MoneyDetailResult(player, playerTotal, chestMoney, chestMoneyMap, playerInvMoney, enderChestMoney, itemMoney, itemMoneyMap);
+		return this.storage.getMoneyDetail(player.getUniqueId());
 	}
 
 	@Override
@@ -101,7 +67,6 @@ public class AldarEconomyProvider implements AldarEconomy
 		return this.syncAction(()->
 		{
 			if(player == null || amount < 0 || system == null) return EconomyResult.invalidArguments;
-			
 			if(amount == 0) return EconomyResult.OK;
 			
 			EconomyActionResult actionResult = this.bank.issuanceToPlayer(system, player, amount, cause, args);

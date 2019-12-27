@@ -1,22 +1,16 @@
 package kr.dja.aldarEconomy.api;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.function.Supplier;
-
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import kr.dja.aldarEconomy.AldarEconomy;
-import kr.dja.aldarEconomy.EconomyUtil;
+import kr.dja.aldarEconomy.AldarEconomyCore;
 import kr.dja.aldarEconomy.api.token.APITokenManager;
 import kr.dja.aldarEconomy.api.token.SystemID;
-import kr.dja.aldarEconomy.bank.Bank;
-import kr.dja.aldarEconomy.data.EconomyDataStorage;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType;
@@ -65,7 +59,7 @@ public class VaultEconomyProvider implements Economy
 	@Override
     public String getName()
     {
-    	return AldarEconomy.PLUGIN_NAME;
+    	return AldarEconomyCore.PLUGIN_NAME;
     }
 
     /**
@@ -505,9 +499,10 @@ public class VaultEconomyProvider implements Economy
      * Gets the list of banks
      * @return the List of Banks
      */
-    public List<String> getBanks()
+    @SuppressWarnings("unchecked")
+	public List<String> getBanks()
     {
-    	return null;
+    	return Collections.EMPTY_LIST;
     }
 
     /**

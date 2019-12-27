@@ -12,6 +12,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.HumanEntity;
 
 import kr.dja.aldarEconomy.data.EconomyDataStorage;
+import kr.dja.aldarEconomy.data.MoneyDetailResult;
 import kr.dja.aldarEconomy.dataObject.Wallet;
 import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
 import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
@@ -48,24 +49,9 @@ public class EconomyLookupCmd implements CommandExecutor, TabCompleter
 			HumanEntity player = CommandUtil.getPlayer(sender, args, 1);
 			if(player == null) return false;
 			UUID id = player.getUniqueId();
-			long money = this.storage.getPlayerMoneyTotal(id);
-			long playerInvMoney = this.storage.playerDependEconomy.getMoney(id);
-			long chestMoney = 0;
-			long itemMoney = 0;
-			for(ChestEconomyChild child : this.storage.chestDependEconomy.childSet)
-			{
-				ChestWallet w = child.eMap.get(id);
-				if(w == null) continue;
-				chestMoney += w.getMoney();
-			}
-			for(ItemEconomyChild child : this.storage.itemEconomyStorage.eMap.values())
-			{
-				ItemWallet w = child.eMap.get(id);
-				if(w == null) continue;
-				itemMoney += w.getMoney();
-			}
-			int enderChestMoney = this.storage.playerEnderChestEconomy.getMoney(id);
-			player.sendMessage(String.format("%s님의 돈은 total:%d inv:%d chest:%d item:%d enderChest:%d", player.getName(), money, playerInvMoney, chestMoney, itemMoney, enderChestMoney));
+			MoneyDetailResult result = this.storage.getMoneyDetail(id);
+			
+			player.sendMessage(String.format("%s님의 돈은 total:%d inv:%d chest:%d item:%d enderChest:%d", player.getName(), result.totalAsset, result.inventoryMoney, result.chestMoneyTotal, result.itemMoneyTotal, result.enderChestMoney));
 			break;
 		}
 			

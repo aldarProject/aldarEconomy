@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.api;
+package kr.dja.aldarEconomy.data;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +11,7 @@ import kr.dja.aldarEconomy.IntLocation;
 
 public class MoneyDetailResult
 {
-	public final OfflinePlayer owner;
+	public final UUID owner;
 	public final long totalAsset;
 	public final int chestMoneyTotal;
 	public final Map<IntLocation, Integer> chestMoneyDetail;
@@ -20,7 +20,7 @@ public class MoneyDetailResult
 	public final int itemMoneyTotal;
 	public final Map<IntLocation, Integer> itemMoneyDetail;
 	
-	public MoneyDetailResult(OfflinePlayer owner, long totalAsset, int chestMoney, Map<IntLocation, Integer> chestMoneyDetail, int inventoryMoney, int enderChestMoney, int itemMoneyTotal, Map<IntLocation, Integer> itemMoneyDetail)
+	public MoneyDetailResult(UUID owner, long totalAsset, int chestMoney, Map<IntLocation, Integer> chestMoneyDetail, int inventoryMoney, int enderChestMoney, int itemMoneyTotal, Map<IntLocation, Integer> itemMoneyDetail)
 	{
 		this.owner = owner;
 		this.totalAsset = totalAsset;

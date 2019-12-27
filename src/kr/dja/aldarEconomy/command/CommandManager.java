@@ -5,6 +5,7 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import kr.dja.aldarEconomy.EconomyUtil;
+import kr.dja.aldarEconomy.api.AldarEconomyProvider;
 import kr.dja.aldarEconomy.bank.Bank;
 import kr.dja.aldarEconomy.data.EconomyDataStorage;
 
@@ -14,11 +15,11 @@ public class CommandManager
 	private final EconomyLookupCmd lookupCmd;
 	private final EconomyBankCmd bankCmd;
 	
-	public CommandManager(JavaPlugin plugin, EconomyDataStorage storage, Bank bank, EconomyUtil util)
+	public CommandManager(JavaPlugin plugin, EconomyDataStorage storage, AldarEconomyProvider provider)
 	{
 		this.plugin = plugin;
 		this.lookupCmd = new EconomyLookupCmd(storage);
-		this.bankCmd = new EconomyBankCmd(bank, util);
+		this.bankCmd = new EconomyBankCmd(provider);
 		
 		PluginCommand cmd;
 		

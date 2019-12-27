@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 
 import kr.dja.aldarEconomy.EconomyUtil;
+import net.minecraft.server.v1_12_R1.BlockState;
 
 public class CommandUtil
 {
@@ -60,7 +61,7 @@ public class CommandUtil
 	}
 	
 	
-	public static Inventory getTargetChest(EconomyUtil util, CommandSender sender)
+	public static Container getTargetChest(CommandSender sender)
 	{
 		if(!(sender instanceof LivingEntity))
 		{
@@ -73,13 +74,8 @@ public class CommandUtil
 			sender.sendMessage("명령 실패: 창고가 아닙니다. " + b.getType());
 			return null;
 		}
-		Inventory i = ((Container)b.getState()).getInventory();
-		if(!(util.isAllowdInventory(i) && i.getType() != InventoryType.ENDER_CHEST))
-		{
-			sender.sendMessage("명령 실패: 지원하지 않는 창고.");
-			return null;
-		}
-		return i;
+		
+		return (Container)b.getState();
 	}
 	
 	public static Location getTargetingLocation(CommandSender sender)

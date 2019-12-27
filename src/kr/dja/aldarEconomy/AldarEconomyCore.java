@@ -6,8 +6,13 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.ServicePriority;
+import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.google.common.util.concurrent.ServiceManager;
+
+import kr.dja.aldarEconomy.api.AldarEconomy;
 import kr.dja.aldarEconomy.api.AldarEconomyProvider;
 import kr.dja.aldarEconomy.api.VaultEconomyProvider;
 import kr.dja.aldarEconomy.api.token.APITokenManager;
@@ -20,8 +25,9 @@ import kr.dja.aldarEconomy.eventListener.EventListener;
 import kr.dja.aldarEconomy.setting.ConfigLoader;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
 import kr.dja.aldarEconomy.tracker.item.ItemTracker;
+import net.milkbowl.vault.economy.Economy;
 
-public class AldarEconomy extends JavaPlugin
+public class AldarEconomyCore extends JavaPlugin
 {
 	public static final String PLUGIN_NAME = "aldarEconomy";
 	
@@ -72,26 +78,29 @@ public class AldarEconomy extends JavaPlugin
 		this.bank = new Bank(this.coinInfo, this.util, this.storage, this.chestTracker, this.tradeTracker);
 		
 		this.pluginManager = this.getServer().getPluginManager();
-		
-
-		
 		this.pluginManager.registerEvents(this.eventListener, this);
 		
-		this.commandManager = new CommandManager(this, this.storage, this.bank, this.util);
 		this.provider = new AldarEconomyProvider(this, this.storage, this.bank, this.util);
+		this.commandManager = new CommandManager(this, this.storage, this.provider);
 		this.vaultProvider = new VaultEconomyProvider(this.apiTokenManager, this, this.provider);
 		
 		this.vaultProvider.setState(true);
 		
-		this.logger.info("Aldar Economy"+version+" enabled by camelCase");
+		ServicesManager sm = this.getServer().getServicesManager();
+		sm.register(Economy.class, this.vaultProvider, this, ServicePriority.High);
+		sm.register(AldarEconomy.class, this.provider, this, ServicePriority.Normal);
+		
+		this.logger.info(PLUGIN_NAME+version+" enabled by camelCase");
 	}
 	
 	@Override
 	public void onDisable()
 	{
+		ServicesManager sm = this.getServer().getServicesManager();
+		sm.unregisterAll(this);
 		this.vaultProvider.setState(false);
 		this.configLoader.saveConfig();
-		this.logger.info("Aldar Economy"+version+" disabled by camelCase");
+		this.logger.info(PLUGIN_NAME+version+" disabled by camelCase");
 	}
 	
 	

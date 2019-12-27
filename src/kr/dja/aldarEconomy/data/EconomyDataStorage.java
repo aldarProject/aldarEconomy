@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import kr.dja.aldarEconomy.IntLocation;
@@ -20,6 +21,7 @@ import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
 import kr.dja.aldarEconomy.dataObject.chest.IChestObserver;
 import kr.dja.aldarEconomy.dataObject.enderChest.EnderChestEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.enderChest.EnderChestWallet;
+import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyChild;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyStorage;
 import kr.dja.aldarEconomy.dataObject.itemEntity.ItemWallet;
 import kr.dja.aldarEconomy.dataObject.player.PlayerEconomyStorage;
@@ -51,6 +53,36 @@ public class EconomyDataStorage
 		this.playerDependEconomy = new PlayerEconomyStorage(this::onModifyPlayerMoney);
 		this.playerEnderChestEconomy = new EnderChestEconomyStorage(this::onModifyEnderChestMoney);
 		this.itemEconomyStorage = new ItemEconomyStorage(this::onModifyItemMoney);
+	}
+	
+	public MoneyDetailResult getMoneyDetail(UUID player)
+	{
+		long playerTotal = this.getPlayerMoneyTotal(player);
+		int playerInvMoney = this.playerDependEconomy.getMoney(player);
+		int chestMoney = 0;
+		int itemMoney = 0;
+		Map<IntLocation, Integer> chestMoneyMap = new HashMap<>();
+		for(ChestEconomyChild child : this.chestDependEconomy.childSet)
+		{
+			ChestWallet w = child.eMap.get(player);
+			if(w == null) continue;
+			IntLocation intLoc = child.getLocation();
+			chestMoneyMap.put(intLoc, w.getMoney());
+			chestMoney += w.getMoney();
+		}
+		Map<IntLocation, Integer> itemMoneyMap = new HashMap<>();
+		for(ItemEconomyChild child : this.itemEconomyStorage.eMap.values())
+		{
+			ItemWallet w = child.eMap.get(player);
+			if(w == null) continue;
+			Entity entity = Bukkit.getEntity(child.parent);
+			IntLocation intLoc = new IntLocation(entity.getLocation());
+			int mapMoney = itemMoneyMap.getOrDefault(intLoc, 0);
+			itemMoneyMap.put(intLoc, mapMoney + w.getMoney());
+			itemMoney += w.getMoney();
+		}
+		int enderChestMoney = this.playerEnderChestEconomy.getMoney(player);
+		return new MoneyDetailResult(player, playerTotal, chestMoney, chestMoneyMap, playerInvMoney, enderChestMoney, itemMoney, itemMoneyMap);
 	}
 	
 	public long getPlayerMoneyTotal(UUID player)
