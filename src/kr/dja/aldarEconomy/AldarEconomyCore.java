@@ -103,6 +103,9 @@ public class AldarEconomyCore extends JavaPlugin
 		this.logger.info(PLUGIN_NAME+version+" disabled by camelCase");
 	}
 	
-	
+	public AldarEconomy getEconomyModule()
+	{
+		return this.provider;
+	}
 
 }
