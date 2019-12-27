@@ -14,6 +14,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import kr.dja.aldarEconomy.EconomyUtil;
+import kr.dja.aldarEconomy.api.token.APITokenManager;
 import kr.dja.aldarEconomy.api.token.SystemID;
 import kr.dja.aldarEconomy.bank.Bank;
 import kr.dja.aldarEconomy.bank.EconomyActionResult;
@@ -23,28 +24,29 @@ import kr.dja.aldarEconomy.data.MoneyDetailResult;
 public class AldarEconomyProvider implements AldarEconomy
 {
 	private final Plugin plugin;
+	private final APITokenManager tokenManager;
 	private final EconomyDataStorage storage;
 	private final Bank bank;
 	private final EconomyUtil util;
 	
 	private final BukkitScheduler scheduler;
 	
-	public AldarEconomyProvider(Plugin plugin, EconomyDataStorage storage, Bank bank, EconomyUtil util)
+	public AldarEconomyProvider(Plugin plugin, APITokenManager tokenManager, EconomyDataStorage storage, Bank bank, EconomyUtil util)
 	{
 		this.plugin = plugin;
 		this.storage = storage;
 		this.bank = bank;
 		this.util = util;
+		this.tokenManager = tokenManager;
 		
 		this.scheduler = Bukkit.getScheduler();
 	}
 	
 
 	@Override
-	public SystemID takeAPIToken(String id)
+	public SystemID takeAPIToken(String name)
 	{
-		
-		return null;
+		return this.tokenManager.takeOrRegisterAPIToken(name);
 	}
 	
 	@Override

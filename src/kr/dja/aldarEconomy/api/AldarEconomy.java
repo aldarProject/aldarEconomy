@@ -13,7 +13,7 @@ public interface AldarEconomy
 	public int getPlayerInventoryMoney(OfflinePlayer player);
 	public MoneyDetailResult getPlayerMoneyDetail(OfflinePlayer player);
 	
-	public SystemID takeAPIToken(String id);
+	public SystemID takeAPIToken(String name);
 	
 	public EconomyResult depositPlayer(HumanEntity player, int amount, SystemID system, String cause, String args);
 	public EconomyResult withdrawPlayer(HumanEntity player, int amount, SystemID system, String cause, String args);
