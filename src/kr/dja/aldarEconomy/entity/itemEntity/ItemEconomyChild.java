@@ -1,10 +1,10 @@
-package kr.dja.aldarEconomy.dataObject.itemEntity;
+package kr.dja.aldarEconomy.entity.itemEntity;
 
 import java.util.UUID;
 
-import kr.dja.aldarEconomy.dataObject.DependType;
-import kr.dja.aldarEconomy.dataObject.EconomyMap;
-import kr.dja.aldarEconomy.dataObject.IEconomyObserver;
+import kr.dja.aldarEconomy.entity.DependType;
+import kr.dja.aldarEconomy.entity.EconomyMap;
+import kr.dja.aldarEconomy.entity.IEconomyObserver;
 
 public class ItemEconomyChild extends EconomyMap<UUID, ItemWallet>
 {

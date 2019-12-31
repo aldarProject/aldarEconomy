@@ -7,7 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import kr.dja.aldarEconomy.EconomyUtil;
 import kr.dja.aldarEconomy.api.AldarEconomyProvider;
 import kr.dja.aldarEconomy.bank.Bank;
-import kr.dja.aldarEconomy.data.EconomyDataStorage;
+import kr.dja.aldarEconomy.storage.EconomyDataStorage;
 
 public class CommandManager
 {

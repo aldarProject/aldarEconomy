@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.data;
+package kr.dja.aldarEconomy.storage;
 
 import java.util.UUID;
 

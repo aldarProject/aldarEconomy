@@ -9,7 +9,7 @@ import org.bukkit.entity.HumanEntity;
 import kr.dja.aldarEconomy.IntLocation;
 import kr.dja.aldarEconomy.api.token.APITokenManager;
 import kr.dja.aldarEconomy.api.token.SystemID;
-import kr.dja.aldarEconomy.dataObject.DependType;
+import kr.dja.aldarEconomy.entity.DependType;
 
 
 public class TradeTracker

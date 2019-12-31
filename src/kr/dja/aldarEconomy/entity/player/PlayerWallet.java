@@ -1,8 +1,8 @@
-package kr.dja.aldarEconomy.dataObject.player;
+package kr.dja.aldarEconomy.entity.player;
 
 import java.util.UUID;
 
-import kr.dja.aldarEconomy.dataObject.Wallet;
+import kr.dja.aldarEconomy.entity.Wallet;
 
 public class PlayerWallet extends Wallet<UUID>
 {

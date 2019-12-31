@@ -1,10 +1,10 @@
-package kr.dja.aldarEconomy.dataObject.enderChest;
+package kr.dja.aldarEconomy.entity.enderChest;
 
 import java.util.UUID;
 
 import kr.dja.aldarEconomy.IntLocation;
-import kr.dja.aldarEconomy.dataObject.EconomyMap;
-import kr.dja.aldarEconomy.dataObject.IEconomyObserver;
+import kr.dja.aldarEconomy.entity.EconomyMap;
+import kr.dja.aldarEconomy.entity.IEconomyObserver;
 
 public class EnderChestEconomyStorage extends EconomyMap<UUID, EnderChestWallet>
 {

@@ -6,7 +6,7 @@ import org.bukkit.block.Container;
 import org.bukkit.entity.HumanEntity;
 
 import kr.dja.aldarEconomy.api.token.SystemID;
-import kr.dja.aldarEconomy.data.MoneyDetailResult;
+import kr.dja.aldarEconomy.storage.MoneyDetailResult;
 
 public interface AldarEconomy
 {

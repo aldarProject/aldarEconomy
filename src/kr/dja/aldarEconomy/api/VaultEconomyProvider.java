@@ -20,6 +20,13 @@ import net.milkbowl.vault.economy.EconomyResponse.ResponseType;
 
 public class VaultEconomyProvider implements Economy
 {
+	/*
+	 * 주의!! chestShop등 일부 플러그인에서 withdrawPlayer, depositPlayer의 반환값을 확인하지 않고 
+	 * 무조건 인출 및 지급을 수행하는 문제가 있습니다, 이 기능은 어지간하면 사용하지 마세요.
+	 * 대표적으로, 잔돈 지급이 불가능할 때 ERROR를 반환하는데, 해당 플러그인에서는
+	 * 플레이어가 해당하는 돈을 가지고 있었을 경우 무조건 OK로 간주합니다.
+	 * 
+	 */
 	private static final String CAUSE_API_ACCESS = "valut_api_access";
 	
 	private final Plugin plugin;
@@ -295,6 +302,7 @@ public class VaultEconomyProvider implements Economy
     	{
     		return new EconomyResponse(-intAmount, playerMoney, ResponseType.SUCCESS, null);
     	}
+    	//throw new RuntimeException("AldarEconomyERROR: " + result.toString());
     	return new EconomyResponse(0, playerMoney, ResponseType.FAILURE, result.toString());
     }
 
@@ -350,7 +358,7 @@ public class VaultEconomyProvider implements Economy
     	{
     		return new EconomyResponse(intAmount, playerMoney, ResponseType.SUCCESS, null);
     	}
-
+    	//throw new Exception("AldarEconomyERROR: " + result.toString());
     	return new EconomyResponse(0, playerMoney, ResponseType.FAILURE, result.toString());
     }
 

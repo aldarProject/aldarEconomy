@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.dataObject;
+package kr.dja.aldarEconomy.entity;
 
 @FunctionalInterface
 public interface IEconomyObserver<EconomyDepend, WalletType extends Wallet<EconomyDepend>>

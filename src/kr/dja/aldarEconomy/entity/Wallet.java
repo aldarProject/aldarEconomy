@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.dataObject;
+package kr.dja.aldarEconomy.entity;
 
 public abstract class Wallet<Depend> implements Comparable<Wallet<Depend>>
 {

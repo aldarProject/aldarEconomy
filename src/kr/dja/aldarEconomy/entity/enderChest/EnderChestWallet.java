@@ -1,9 +1,9 @@
-package kr.dja.aldarEconomy.dataObject.enderChest;
+package kr.dja.aldarEconomy.entity.enderChest;
 
 import java.util.UUID;
 
 import kr.dja.aldarEconomy.IntLocation;
-import kr.dja.aldarEconomy.dataObject.Wallet;
+import kr.dja.aldarEconomy.entity.Wallet;
 
 public class EnderChestWallet extends Wallet<UUID>
 {

@@ -2,7 +2,7 @@ package kr.dja.aldarEconomy.tracker.chest;
 
 import java.util.UUID;
 
-import kr.dja.aldarEconomy.dataObject.DependType;
+import kr.dja.aldarEconomy.entity.DependType;
 
 public class DestroyChestResultMember
 {

@@ -1,7 +1,6 @@
-package kr.dja.aldarEconomy.dataObject;
+package kr.dja.aldarEconomy.entity;
 
 public enum DependType
 {
 	PLAYER, SYSTEM
-
 }

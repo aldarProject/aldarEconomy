@@ -14,16 +14,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.bergerkiller.bukkit.common.utils.ItemUtil;
-
 import kr.dja.aldarEconomy.EconomyUtil;
 import kr.dja.aldarEconomy.IntLocation;
 import kr.dja.aldarEconomy.api.token.APITokenManager;
 import kr.dja.aldarEconomy.api.token.SystemID;
 import kr.dja.aldarEconomy.coininfo.CoinInfo;
 import kr.dja.aldarEconomy.coininfo.CoinMetadata;
-import kr.dja.aldarEconomy.data.EconomyDataStorage;
-import kr.dja.aldarEconomy.dataObject.DependType;
+import kr.dja.aldarEconomy.entity.DependType;
+import kr.dja.aldarEconomy.storage.EconomyDataStorage;
 import kr.dja.aldarEconomy.tracker.chest.ChestTracker;
 
 public class Bank

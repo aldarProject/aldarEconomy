@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.dataObject.chest;
+package kr.dja.aldarEconomy.entity.chest;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,7 +10,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 
 import kr.dja.aldarEconomy.IntLocation;
-import kr.dja.aldarEconomy.dataObject.DependType;
+import kr.dja.aldarEconomy.entity.DependType;
 
 public class ChestEconomyStorage
 {

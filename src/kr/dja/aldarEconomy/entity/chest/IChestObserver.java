@@ -1,4 +1,4 @@
-package kr.dja.aldarEconomy.dataObject.chest;
+package kr.dja.aldarEconomy.entity.chest;
 
 import java.util.UUID;
 

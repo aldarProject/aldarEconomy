@@ -1,9 +1,9 @@
-package kr.dja.aldarEconomy.dataObject.player;
+package kr.dja.aldarEconomy.entity.player;
 
 import java.util.UUID;
 
-import kr.dja.aldarEconomy.dataObject.EconomyMap;
-import kr.dja.aldarEconomy.dataObject.IEconomyObserver;
+import kr.dja.aldarEconomy.entity.EconomyMap;
+import kr.dja.aldarEconomy.entity.IEconomyObserver;
 
 public class PlayerEconomyStorage extends EconomyMap<UUID, PlayerWallet>
 {

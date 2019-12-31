@@ -18,8 +18,8 @@ import kr.dja.aldarEconomy.api.token.APITokenManager;
 import kr.dja.aldarEconomy.api.token.SystemID;
 import kr.dja.aldarEconomy.bank.Bank;
 import kr.dja.aldarEconomy.bank.EconomyActionResult;
-import kr.dja.aldarEconomy.data.EconomyDataStorage;
-import kr.dja.aldarEconomy.data.MoneyDetailResult;
+import kr.dja.aldarEconomy.storage.EconomyDataStorage;
+import kr.dja.aldarEconomy.storage.MoneyDetailResult;
 
 public class AldarEconomyProvider implements AldarEconomy
 {

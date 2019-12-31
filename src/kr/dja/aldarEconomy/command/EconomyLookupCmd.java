@@ -11,13 +11,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.HumanEntity;
 
-import kr.dja.aldarEconomy.data.EconomyDataStorage;
-import kr.dja.aldarEconomy.data.MoneyDetailResult;
-import kr.dja.aldarEconomy.dataObject.Wallet;
-import kr.dja.aldarEconomy.dataObject.chest.ChestEconomyChild;
-import kr.dja.aldarEconomy.dataObject.chest.ChestWallet;
-import kr.dja.aldarEconomy.dataObject.itemEntity.ItemEconomyChild;
-import kr.dja.aldarEconomy.dataObject.itemEntity.ItemWallet;
+import kr.dja.aldarEconomy.entity.Wallet;
+import kr.dja.aldarEconomy.entity.chest.ChestEconomyChild;
+import kr.dja.aldarEconomy.entity.chest.ChestWallet;
+import kr.dja.aldarEconomy.entity.itemEntity.ItemEconomyChild;
+import kr.dja.aldarEconomy.entity.itemEntity.ItemWallet;
+import kr.dja.aldarEconomy.storage.EconomyDataStorage;
+import kr.dja.aldarEconomy.storage.MoneyDetailResult;
 
 public class EconomyLookupCmd implements CommandExecutor, TabCompleter
 {
