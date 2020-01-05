@@ -7,9 +7,9 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/patched_1.12.2.jar"/>
 	<classpathentry kind="lib" path="lib/gson-2.6.2-javadoc.jar"/>
 	<classpathentry kind="lib" path="lib/mariadb-java-client-2.4.4.jar"/>
 	<classpathentry kind="lib" path="lib/Vault.jar"/>
+	<classpathentry kind="lib" path="lib/patched_1.15.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

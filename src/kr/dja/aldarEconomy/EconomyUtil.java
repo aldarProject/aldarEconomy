@@ -1,9 +1,12 @@
 package kr.dja.aldarEconomy;
 
 
+import org.bukkit.block.Container;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import kr.dja.aldarEconomy.coininfo.CoinInfo;
@@ -52,7 +55,11 @@ public class EconomyUtil
 	
 	public boolean isAllowdInventory(Inventory inv)
 	{
-		
+		InventoryHolder holder = inv.getHolder();
+		if(holder instanceof DoubleChest)
+		{
+			return true;
+		}
 		switch(inv.getType())
 		{
 		case ANVIL:
@@ -75,13 +82,11 @@ public class EconomyUtil
 			break;
 		}
 		
-		switch(inv.getTitle())
+		if(!(holder instanceof Container))
 		{
-		case "Minecart with Chest":
 			return false;
-			
 		}
-		
+
 		return true;
 	}
 	
