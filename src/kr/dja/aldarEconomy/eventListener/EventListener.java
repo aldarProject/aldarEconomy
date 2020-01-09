@@ -194,10 +194,13 @@ public class EventListener implements Listener
 	public void onInventoryPickupItem(InventoryPickupItemEvent e)
 	{// 호퍼나 마인카트가 아이템을 먹었을 때
 		if(e.isCancelled()) return;
-		CoinMetadata money = this.checker.isMoney(e.getItem().getItemStack());
+		Item i = e.getItem();
+		ItemStack stack = i.getItemStack();
+		CoinMetadata money = this.checker.isMoney(stack);
 		if(money == null) return;
 		e.setCancelled(true);
-		e.getItem().remove();//돈 삭제(돈 삭제 이벤트 호출됨)
+		this.itemTracker.onMoneyDespawn(i, money.value * stack.getAmount());
+		i.remove();//돈 삭제(돈 삭제 이벤트 호출됨)
 		
 	}
 	
