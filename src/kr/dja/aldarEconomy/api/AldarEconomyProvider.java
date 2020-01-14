@@ -1,5 +1,6 @@
 package kr.dja.aldarEconomy.api;
 
+import java.text.DecimalFormat;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
@@ -30,6 +31,8 @@ public class AldarEconomyProvider implements AldarEconomy
 	private final EconomyUtil util;
 
 	private final BukkitScheduler scheduler;
+	
+	private final DecimalFormat df;
 
 	public AldarEconomyProvider(Plugin plugin, APITokenManager tokenManager, EconomyDataStorage storage, Bank bank,
 			EconomyUtil util)
@@ -39,6 +42,7 @@ public class AldarEconomyProvider implements AldarEconomy
 		this.bank = bank;
 		this.util = util;
 		this.tokenManager = tokenManager;
+		this.df = new DecimalFormat("#,##0");
 
 		this.scheduler = Bukkit.getScheduler();
 	}
@@ -242,6 +246,12 @@ public class AldarEconomyProvider implements AldarEconomy
 		default:
 			return EconomyResult.unknownError;
 		}
+	}
+
+	@Override
+	public String economyFormat(int economy)
+	{		
+		return df.format(economy);
 	}
 
 }

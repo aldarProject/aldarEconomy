@@ -44,4 +44,6 @@ public interface AldarEconomy
 	public EconomyResult playerToChest(HumanEntity player, Container containr, int amount, SystemID system, String cause, String args);
 	public EconomyResult chestToPlayer(Container container, HumanEntity player, int amount, SystemID system, String cause, String args);
 	public EconomyResult playerToPlayer(HumanEntity source, HumanEntity target, int amount, SystemID system, String cause, String args);
+	
+	public String economyFormat(int economy);
 }
